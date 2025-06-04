@@ -29,6 +29,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
       row.map(cell => cell !== null ? '' : null)
     );
     setUserGrid(newUserGrid as string[][]);
+    
+    // Reset selection when crossword changes
+    setActiveCell(null);
+    setHighlightedWord(null);
   }, [crossword]);
 
   // Create cell info with numbers
@@ -86,6 +90,12 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
   const handleCellClick = (row: number, col: number) => {
     const cellInfo = getCellInfo(row, col);
     if (!cellInfo.isBlank) return; // Can't click on black cells
+    
+    // Focus the crossword container to enable keyboard events
+    const crosswordContainer = document.querySelector('.crossword-container') as HTMLElement;
+    if (crosswordContainer) {
+      crosswordContainer.focus();
+    }
 
     // If clicking the same cell, toggle direction
     if (activeCell && activeCell.row === row && activeCell.col === col) {
@@ -125,7 +135,14 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
 
   // Handle keyboard input
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Only handle keyboard events if we have an active cell AND the crossword is focused
     if (!highlightedWord || !activeCell) return;
+    
+    // Don't capture keyboard events if user is typing in an input field
+    const target = event.target as HTMLElement;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      return;
+    }
 
     if (event.key === 'Backspace') {
       event.preventDefault();
@@ -187,7 +204,16 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
   };
 
   return (
-    <div className="crossword-container">
+    <div 
+      className="crossword-container"
+      tabIndex={0}
+      style={{ outline: 'none' }}
+      onBlur={() => {
+        // Clear selection when crossword loses focus
+        setActiveCell(null);
+        setHighlightedWord(null);
+      }}
+    >
       <div className="crossword-grid">
         <div style={{
           display: 'grid',

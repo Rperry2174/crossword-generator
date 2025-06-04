@@ -21,6 +21,17 @@ export interface WordListRequest {
   words: string[];
 }
 
+export interface TopicRequest {
+  topic: string;
+}
+
+export interface TopicWordsResponse {
+  words: string[];
+  topic: string;
+  success: boolean;
+  message: string;
+}
+
 const API_BASE_URL = 'http://localhost:8000';
 
 export class CrosswordAPI {
@@ -59,6 +70,29 @@ export class CrosswordAPI {
     };
 
     return crosswordGrid;
+  }
+
+  static async generateWordsFromTopic(topic: string): Promise<string[]> {
+    const response = await fetch(`${API_BASE_URL}/generate-from-topic`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ topic }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    const data: TopicWordsResponse = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message);
+    }
+
+    return data.words;
   }
 
   static async healthCheck(): Promise<boolean> {

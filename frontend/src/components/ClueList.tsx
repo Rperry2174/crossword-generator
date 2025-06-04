@@ -6,6 +6,8 @@ interface ClueListProps {
 }
 
 const ClueList: React.FC<ClueListProps> = ({ wordPlacements }) => {
+  console.log('ClueList received word placements:', wordPlacements.length, 'words');
+  
   const acrossWords = wordPlacements
     .filter(placement => placement.direction === Direction.HORIZONTAL)
     .sort((a, b) => (a.number || 0) - (b.number || 0));
@@ -13,6 +15,8 @@ const ClueList: React.FC<ClueListProps> = ({ wordPlacements }) => {
   const downWords = wordPlacements
     .filter(placement => placement.direction === Direction.VERTICAL)
     .sort((a, b) => (a.number || 0) - (b.number || 0));
+    
+  console.log('Across words:', acrossWords.length, 'Down words:', downWords.length);
 
   return (
     <div className="clue-lists" style={{ display: 'flex', gap: '40px', marginTop: '20px' }}>

@@ -5,6 +5,7 @@ from typing import List, Optional
 import json
 from src.crossword_generator import CrosswordGenerator
 from src.models import Direction
+from src.llm_service import LLMService
 
 app = FastAPI(title="Crossword Generator API", version="1.0.0")
 
@@ -19,6 +20,15 @@ app.add_middleware(
 
 class WordListRequest(BaseModel):
     words: List[str]
+
+class TopicRequest(BaseModel):
+    topic: str
+
+class TopicWordsResponse(BaseModel):
+    words: List[str]
+    topic: str
+    success: bool
+    message: str
 
 class WordPlacementResponse(BaseModel):
     word: str
@@ -122,6 +132,35 @@ async def generate_crossword(request: WordListRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
+        )
+
+@app.post("/generate-from-topic", response_model=TopicWordsResponse)
+async def generate_words_from_topic(request: TopicRequest):
+    try:
+        # Validate input
+        if not request.topic or not request.topic.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Please provide a topic"
+            )
+        
+        topic = request.topic.strip()
+        
+        # Generate words using LLM service
+        words = await LLMService.generate_words_from_topic(topic)
+        
+        return TopicWordsResponse(
+            words=words,
+            topic=topic,
+            success=True,
+            message=f"Successfully generated {len(words)} words for topic '{topic}'"
+        )
+        
+    except Exception as e:
+        print(f"Error generating words for topic '{request.topic}': {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate words for topic: {str(e)}"
         )
 
 @app.get("/health")

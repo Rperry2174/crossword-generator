@@ -1,133 +1,187 @@
-# Crossword Puzzle Generator
+# Dynamic Crossword Generator
 
-An AI-powered crossword puzzle generator built to demonstrate LLM capabilities for creating interactive puzzles.
+An AI-powered crossword puzzle generator that creates interactive puzzles from any topic using LLM technology.
 
-## Project Overview
+## Features
 
-This project aims to create a web application where users can input topics they know well (e.g., "The Office", "World War II", "New Girl") and receive a playable crossword puzzle based on that topic. The final product will be shareable with friends and demonstrate how easy it is to build cool projects with LLMs.
+- **Topic-Based Generation**: Enter any topic (e.g., "Basketball", "The Office") and get 30 related crossword words
+- **Multiple LLM Providers**: Supports OpenAI, Anthropic Claude, Ollama (local), and mock data
+- **Interactive Crosswords**: Click-to-type interface with direction switching
+- **Custom Word Lists**: Manual word input for advanced users
+- **Robust Validation**: Algorithm ensures valid crossword structure with proper word intersections
+- **Real-time Generation**: See crosswords created live from your topics
 
-## Current Status: Phase 1
-
-Phase 1 focuses on creating a basic crossword algorithm that takes a predefined list of 5-10 words and generates a valid crossword grid with proper intersections.
-
-## Technology Stack
-
-- **Backend**: Python with pipenv for package management
-- **Frontend**: React with TypeScript and npm for package management  
-- **Testing**: pytest for Python backend tests
-- **Architecture**: Separate backend/frontend to enable future website/app deployment
-
-## Project Structure
-
-```
-crossword-generator/
-├── backend/
-│   ├── Pipfile
-│   ├── src/
-│   │   ├── __init__.py
-│   │   ├── crossword_generator.py
-│   │   └── models.py
-│   └── tests/
-│       ├── __init__.py
-│       └── test_crossword_generator.py
-├── frontend/
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── src/
-│   │   ├── App.tsx
-│   │   ├── components/
-│   │   │   └── CrosswordGrid.tsx
-│   │   └── types/
-│   │       └── crossword.ts
-│   └── public/
-├── prompts/
-│   └── phase-1-development-prompt.md
-└── README.md
-```
-
-## Getting Started
-
-### Backend Setup
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Install dependencies with pipenv:
-   ```bash
-   pipenv install pytest
-   ```
-
-3. Run tests:
-   ```bash
-   pipenv run pytest tests/ -v
-   ```
-
-4. Run visual test:
-   ```bash
-   pipenv run python -c "from src.crossword_generator import CrosswordGenerator; gen = CrosswordGenerator(['PYTHON', 'CODE', 'TEST', 'GRID', 'WORD', 'PLACE', 'CROSS']); print(gen.create_visual_test_output())"
-   ```
+## Quick Start
 
 ### Frontend Setup
+```bash
+cd frontend
+npm install
+cp .env.example .env
+# Edit .env with your API keys (see LLM Configuration below)
+npm start
+```
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+### Backend Setup
+```bash
+cd backend
+pipenv install
+pipenv run python start_server.py
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+## LLM Configuration
 
-3. Start development server:
-   ```bash
-   npm start
-   ```
+Create a `.env` file in the `frontend` directory:
 
-## Phase 1 Features
+### Option 1: OpenAI (Recommended)
+```env
+REACT_APP_LLM_PROVIDER=openai
+REACT_APP_OPENAI_API_KEY=your_openai_api_key_here
+REACT_APP_OPENAI_MODEL=gpt-3.5-turbo
+```
 
-- **Core Algorithm**: Generates crossword grids with proper word intersections
-- **Test Suite**: Comprehensive tests ensuring algorithm correctness
-- **Visual Output**: Debug-friendly grid visualization
-- **Data Models**: Type-safe data structures for crossword representation
+### Option 2: Anthropic Claude
+```env
+REACT_APP_LLM_PROVIDER=anthropic
+REACT_APP_ANTHROPIC_API_KEY=your_anthropic_api_key_here
+REACT_APP_ANTHROPIC_MODEL=claude-3-haiku-20240307
+```
 
-## Algorithm Approach
+### Option 3: Local Ollama
+```env
+REACT_APP_LLM_PROVIDER=ollama
+REACT_APP_OLLAMA_BASE_URL=http://localhost:11434
+REACT_APP_OLLAMA_MODEL=llama2
+```
 
-The crossword generator uses a methodical approach:
+### Option 4: Mock Data (No API Key Required)
+```env
+REACT_APP_LLM_PROVIDER=mock
+```
 
-1. Places the first word horizontally in the center of the grid
-2. For each remaining word, finds potential intersections with already-placed words
-3. Attempts to place intersecting words perpendicular to existing words
-4. Falls back to random placement if no intersections are possible
-5. Ensures no letter conflicts occur during placement
+## How It Works
 
-## Testing
+### 1. Topic Input → LLM Processing
+**Input Example:**
+```
+Topic: "Basketball"
+```
 
-The project includes comprehensive tests that verify:
-- Intersection detection between words
-- Word placement validation
-- Grid generation with multiple intersections
-- Conflict-free letter placement
+**LLM Prompt Template:**
+```
+You are helping create a crossword puzzle. Generate exactly 30 words related to the topic "Basketball".
 
-All tests must pass for the algorithm to be considered functional.
+Requirements:
+- Words should be 3-15 letters long
+- Use common English words that most people would know
+- Choose words with good crossword potential (mix of vowels and consonants)
+- Avoid proper nouns, acronyms, or very technical terms
+- Return ONLY the words in uppercase, separated by commas
+- No explanations, just the comma-separated word list
 
-## Development History
+Example Output: BASKETBALL,PLAYER,COURT,HOOP,DUNK,SCORE,TEAM,COACH,REFEREE,FOUL,TIMEOUT,QUARTER,POINT,GUARD,FORWARD,CENTER,REBOUND,ASSIST,STEAL,BLOCK,SHOT,LAYUP,JERSEY,ARENA,PLAYOFFS,CHAMPIONSHIP,LEAGUE,DRAFT,ROOKIE,VETERAN
+```
 
-This project was created following the detailed specifications in `prompts/phase-1-development-prompt.md`.
+### 2. Word Validation → Crossword Generation
+- Backend receives comma-separated word list
+- Crossword algorithm creates valid 15x15 grid
+- Words placed with proper intersections and no conflicts
+- Returns grid data with word positions and numbers
 
-**Original development prompt**: https://claude.ai/public/artifacts/fd3d7c29-3149-4655-8cad-f158a9f0a4e8
+### 3. Interactive Puzzle Display
+- Real-time crossword rendering
+- Click-to-type functionality
+- Direction switching (across/down)
+- Numbered clue lists
 
-## Next Steps
+## Architecture
 
-Future phases will include:
-- Dynamic word generation based on user topics
-- Interactive puzzle solving interface
-- Clue generation and management
-- Web deployment and sharing capabilities
-- Enhanced crossword generation algorithms
+### Frontend (React + TypeScript)
+- **Components**: Tabbed interface, LLM status indicators, interactive grid
+- **Services**: LLM API integration, crossword API client
+- **State Management**: Real-time crossword updates, loading states
+
+### Backend (Python + FastAPI)
+- **Crossword Algorithm**: Robust word placement with validation
+- **API Endpoints**: Word list processing, crossword generation
+- **Validation**: Prevents invalid word formations and ensures connectivity
+
+### LLM Integration
+- **Multi-Provider Support**: OpenAI, Anthropic, Ollama, Mock
+- **Robust Parsing**: Extracts words from various LLM response formats
+- **Fallback Strategy**: Mock data if API calls fail
+- **Secure Configuration**: Environment variable API key management
+
+## Example Workflows
+
+### Popular Topics Ready to Try:
+- **TV Shows**: "The Office", "Friends", "Breaking Bad"
+- **Sports**: "Basketball", "Soccer", "Olympics"  
+- **History**: "World War II", "Ancient Rome", "Space Exploration"
+- **Entertainment**: "Harry Potter", "Star Wars", "Marvel"
+
+### Custom Word Lists:
+Switch to "Custom Words" tab for manual word entry like:
+```
+PYTHON,CODE,TEST,GRID,WORD,PLACE,CROSS
+```
+
+## Development
+
+### Project Structure
+```
+crossword-generator/
+├── frontend/          # React TypeScript app
+│   ├── src/
+│   │   ├── components/    # UI components
+│   │   ├── services/      # API integration
+│   │   └── types/         # TypeScript interfaces
+├── backend/           # Python FastAPI server
+│   ├── src/
+│   │   ├── api.py        # REST endpoints
+│   │   ├── crossword_generator.py  # Core algorithm
+│   │   └── models.py     # Data structures
+└── prompts/           # Development documentation
+```
+
+### Testing
+```bash
+# Backend tests
+cd backend && pipenv run pytest tests/ -v
+
+# Frontend development
+cd frontend && npm start
+
+# Test LLM integration
+# Set REACT_APP_LLM_PROVIDER=mock for testing without API keys
+```
+
+## Deployment
+
+### Environment Variables
+- `REACT_APP_LLM_PROVIDER`: LLM service to use
+- `REACT_APP_OPENAI_API_KEY`: OpenAI API key
+- `REACT_APP_ANTHROPIC_API_KEY`: Anthropic API key
+- `REACT_APP_OLLAMA_BASE_URL`: Ollama server URL
+
+### Production Notes
+- Store API keys securely
+- Configure CORS for production domains
+- Consider rate limiting for LLM API calls
+- Cache common topic results
 
 ## Contributing
 
-This project follows test-driven development principles. All new features should include comprehensive tests and maintain the existing test suite's passing status.
+1. Fork the repository
+2. Create feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit pull request
+
+## License
+
+MIT License - See LICENSE file for details
+
+---
+
+🧩 **Built with Claude Code** - Demonstrating the power of AI-assisted development

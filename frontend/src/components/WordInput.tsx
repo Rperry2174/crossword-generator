@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
+import TabContainer from './TabContainer';
+import TopicInput from './TopicInput';
+import { CrosswordAPI } from '../services/api';
 
 interface WordInputProps {
   onGenerateCrossword: (words: string[]) => void;
   isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  setError: (error: string) => void;
 }
 
-const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading }) => {
+const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, setIsLoading, setError }) => {
   const [wordInput, setWordInput] = useState('');
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setLocalError('');
 
     if (!wordInput.trim()) {
-      setError('Please enter some words');
+      setLocalError('Please enter some words');
       return;
     }
 
@@ -26,25 +31,39 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading })
 
     // Validate words
     if (words.length < 2) {
-      setError('Please enter at least 2 words');
+      setLocalError('Please enter at least 2 words');
       return;
     }
 
     // Check for invalid characters
     const invalidWords = words.filter(word => !/^[A-Z]+$/.test(word));
     if (invalidWords.length > 0) {
-      setError(`Invalid words (only letters allowed): ${invalidWords.join(', ')}`);
+      setLocalError(`Invalid words (only letters allowed): ${invalidWords.join(', ')}`);
       return;
     }
 
     // Check for short words
     const shortWords = words.filter(word => word.length < 2);
     if (shortWords.length > 0) {
-      setError(`Words too short (minimum 2 letters): ${shortWords.join(', ')}`);
+      setLocalError(`Words too short (minimum 2 letters): ${shortWords.join(', ')}`);
       return;
     }
 
     onGenerateCrossword(words);
+  };
+
+  const handleTopicGeneration = async (topic: string) => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const words = await CrosswordAPI.generateWordsFromTopic(topic);
+      onGenerateCrossword(words);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate words from topic');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const exampleWords = [
@@ -54,16 +73,9 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading })
     'RED,BLUE,GREEN,YELLOW,PURPLE'
   ];
 
-  return (
-    <div style={{
-      marginBottom: '30px',
-      padding: '20px',
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      backgroundColor: '#f9f9f9'
-    }}>
-      <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Generate Custom Crossword</h3>
-      
+  // Custom words tab content
+  const customWordsTab = (
+    <>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <label 
@@ -94,7 +106,7 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading })
           />
         </div>
 
-        {error && (
+        {localError && (
           <div style={{
             color: '#d32f2f',
             marginBottom: '15px',
@@ -104,7 +116,7 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading })
             borderRadius: '4px',
             fontSize: '14px'
           }}>
-            {error}
+            {localError}
           </div>
         )}
 
@@ -154,6 +166,39 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading })
           ))}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div style={{
+      marginBottom: '30px',
+      padding: '20px',
+      border: '1px solid #ddd',
+      borderRadius: '8px',
+      backgroundColor: '#f9f9f9'
+    }}>
+      <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Generate Crossword Puzzle</h3>
+      
+      <TabContainer
+        defaultTab="topic"
+        tabs={[
+          {
+            id: 'topic',
+            label: '🎯 From Topic',
+            content: (
+              <TopicInput 
+                onGenerateFromTopic={handleTopicGeneration}
+                isLoading={isLoading}
+              />
+            )
+          },
+          {
+            id: 'custom',
+            label: '✏️ Custom Words',
+            content: customWordsTab
+          }
+        ]}
+      />
     </div>
   );
 };

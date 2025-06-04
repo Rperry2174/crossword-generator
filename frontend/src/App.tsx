@@ -27,6 +27,7 @@ const App: React.FC = () => {
 
     try {
       const newCrossword = await CrosswordAPI.generateCrossword(words);
+      console.log('New crossword generated:', newCrossword.word_placements.length, 'words');
       setCrossword(newCrossword);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate crossword');
@@ -69,6 +70,8 @@ const App: React.FC = () => {
       <WordInput 
         onGenerateCrossword={handleGenerateCrossword} 
         isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        setError={setError}
       />
 
       {/* Error display */}
@@ -105,8 +108,14 @@ const App: React.FC = () => {
           </p>
           
           <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
-            <CrosswordGrid crossword={crossword} />
-            <ClueList wordPlacements={crossword.word_placements} />
+            <CrosswordGrid 
+              key={`crossword-${crossword.word_placements.map(w => w.word).join('-')}`}
+              crossword={crossword} 
+            />
+            <ClueList 
+              key={`clues-${crossword.word_placements.map(w => w.word).join('-')}`}
+              wordPlacements={crossword.word_placements} 
+            />
           </div>
           
           <div style={{ 
