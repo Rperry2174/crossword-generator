@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import LLMStatus from './LLMStatus';
 
+interface Theme {
+  colors: any;
+  typography: any;
+  spacing: any;
+  borderRadius: any;
+  shadow: any;
+}
+
 interface TopicInputProps {
   onGenerateFromTopic: (topic: string) => void;
   isLoading: boolean;
+  theme: Theme;
 }
 
-const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading }) => {
+const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading, theme }) => {
   const [topic, setTopic] = useState('');
   const [error, setError] = useState('');
 
@@ -41,20 +50,22 @@ const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading 
   const llmProvider = process.env.REACT_APP_LLM_PROVIDER || 'mock';
 
   return (
-    <div>
-      <LLMStatus provider={llmProvider} />
+    <div style={{ padding: theme.spacing.md }}>
+      <LLMStatus provider={llmProvider} theme={theme} />
       
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+      <form onSubmit={handleSubmit} style={{ marginTop: theme.spacing.lg }}>
+        <div style={{ marginBottom: theme.spacing.lg }}>
           <label 
             htmlFor="topicInput" 
             style={{ 
               display: 'block', 
-              marginBottom: '5px',
-              fontWeight: 'bold'
+              marginBottom: theme.spacing.sm,
+              fontSize: theme.typography.fontSize.sm,
+              fontWeight: theme.typography.fontWeight.semibold,
+              color: theme.colors.text.primary
             }}
           >
-            Enter a topic:
+            Enter a topic
           </label>
           <input
             id="topicInput"
@@ -65,32 +76,77 @@ const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading 
             disabled={isLoading}
             style={{
               width: '100%',
-              padding: '12px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '16px'
+              padding: theme.spacing.md,
+              border: `2px solid ${error ? theme.colors.error : theme.colors.border}`,
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.fontSize.base,
+              backgroundColor: theme.colors.background,
+              color: theme.colors.text.primary,
+              transition: 'all 0.2s ease',
+              outline: 'none'
+            }}
+            onFocus={(e) => {
+              if (!error) {
+                e.target.style.borderColor = theme.colors.primary;
+                e.target.style.boxShadow = `0 0 0 3px ${theme.colors.primary}15`;
+              }
+            }}
+            onBlur={(e) => {
+              if (!error) {
+                e.target.style.borderColor = theme.colors.border;
+                e.target.style.boxShadow = 'none';
+              }
             }}
           />
           <div style={{ 
-            fontSize: '12px', 
-            color: '#666', 
-            marginTop: '5px' 
+            fontSize: theme.typography.fontSize.xs,
+            color: theme.colors.text.tertiary,
+            marginTop: theme.spacing.sm,
+            display: 'flex',
+            alignItems: 'center',
+            gap: theme.spacing.sm
           }}>
-            AI will generate 30 crossword words related to your topic
+            <span style={{ 
+              display: 'inline-block',
+              width: '4px',
+              height: '4px',
+              borderRadius: '50%',
+              backgroundColor: theme.colors.success
+            }} />
+            AI will generate 30 words with clues for your topic
           </div>
         </div>
 
         {error && (
           <div style={{
-            color: '#d32f2f',
-            marginBottom: '15px',
-            padding: '8px',
-            backgroundColor: '#ffebee',
-            border: '1px solid #ffcdd2',
-            borderRadius: '4px',
-            fontSize: '14px'
+            padding: theme.spacing.md,
+            borderRadius: theme.borderRadius.md,
+            marginBottom: theme.spacing.lg,
+            backgroundColor: '#fef2f2',
+            border: `1px solid #fecaca`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: theme.spacing.sm
           }}>
-            {error}
+            <div style={{
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: theme.colors.error,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              marginTop: '2px'
+            }}>
+              <span style={{ color: 'white', fontSize: '10px', fontWeight: 'bold' }}>!</span>
+            </div>
+            <div style={{ 
+              fontSize: theme.typography.fontSize.sm,
+              color: '#991b1b'
+            }}>
+              {error}
+            </div>
           </div>
         )}
 
@@ -98,28 +154,57 @@ const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading 
           type="submit"
           disabled={isLoading}
           style={{
-            backgroundColor: isLoading ? '#ccc' : '#4CAF50',
-            color: 'white',
+            backgroundColor: isLoading ? theme.colors.secondary : theme.colors.success,
+            color: theme.colors.text.inverse,
             border: 'none',
-            padding: '12px 24px',
-            borderRadius: '4px',
+            padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+            borderRadius: theme.borderRadius.md,
             cursor: isLoading ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
+            fontSize: theme.typography.fontSize.base,
+            fontWeight: theme.typography.fontWeight.semibold,
+            transition: 'all 0.2s ease',
+            boxShadow: theme.shadow.sm,
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: theme.spacing.sm
+          }}
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = '#047857';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = theme.shadow.md;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = theme.colors.success;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = theme.shadow.sm;
+            }
           }}
         >
-          {isLoading ? 'Generating Topic Crossword...' : 'Generate from Topic'}
+          <span>✨</span>
+          {isLoading ? 'Generating AI Crossword...' : 'Generate with AI'}
         </button>
       </form>
 
-      <div style={{ marginTop: '25px' }}>
-        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: '#666' }}>
-          <strong>Popular topics to try:</strong>
-        </p>
+      <div style={{ marginTop: theme.spacing.xl }}>
+        <h4 style={{ 
+          margin: `0 0 ${theme.spacing.md} 0`, 
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.secondary,
+          fontWeight: theme.typography.fontWeight.semibold,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em'
+        }}>
+          Popular Topics
+        </h4>
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-          gap: '8px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+          gap: theme.spacing.sm
         }}>
           {exampleTopics.map((example, index) => (
             <button
@@ -128,22 +213,32 @@ const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading 
               onClick={() => setTopic(example)}
               disabled={isLoading}
               style={{
-                padding: '8px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                backgroundColor: 'white',
+                padding: theme.spacing.sm,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.sm,
+                backgroundColor: theme.colors.background,
                 cursor: isLoading ? 'not-allowed' : 'pointer',
-                fontSize: '13px',
-                color: '#333',
-                transition: 'background-color 0.2s'
+                fontSize: theme.typography.fontSize.xs,
+                color: theme.colors.text.secondary,
+                transition: 'all 0.2s ease',
+                textAlign: 'center',
+                fontWeight: theme.typography.fontWeight.medium
               }}
               onMouseEnter={(e) => {
                 if (!isLoading) {
-                  e.currentTarget.style.backgroundColor = '#f5f5f5';
+                  e.currentTarget.style.backgroundColor = theme.colors.surfaceHover;
+                  e.currentTarget.style.borderColor = theme.colors.primary;
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = theme.colors.background;
+                  e.currentTarget.style.borderColor = theme.colors.border;
+                  e.currentTarget.style.color = theme.colors.text.secondary;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
               {example}

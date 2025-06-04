@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-interface LLMStatusProps {
-  provider: string;
+interface Theme {
+  colors: any;
+  typography: any;
+  spacing: any;
+  borderRadius: any;
+  shadow: any;
 }
 
-const LLMStatus: React.FC<LLMStatusProps> = ({ provider }) => {
+interface LLMStatusProps {
+  provider: string;
+  theme: Theme;
+}
+
+const LLMStatus: React.FC<LLMStatusProps> = ({ provider, theme }) => {
   const [status, setStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [details, setDetails] = useState('');
 
@@ -72,24 +81,46 @@ const LLMStatus: React.FC<LLMStatusProps> = ({ provider }) => {
 
   return (
     <div style={{
-      padding: '8px 12px',
-      borderRadius: '4px',
-      marginBottom: '15px',
-      backgroundColor: status === 'connected' ? '#e8f5e8' : status === 'disconnected' ? '#ffebee' : '#fff3e0',
-      border: `1px solid ${getStatusColor()}`,
-      fontSize: '14px'
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing.md,
+      backgroundColor: status === 'connected' ? '#f0fdf4' : status === 'disconnected' ? '#fef2f2' : '#fffbeb',
+      border: `1px solid ${status === 'connected' ? '#bbf7d0' : status === 'disconnected' ? '#fecaca' : '#fed7aa'}`,
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      fontSize: theme.typography.fontSize.xs
     }}>
-      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-        {getStatusIcon()} LLM Provider: {provider.toUpperCase()}
+      <div style={{
+        fontSize: theme.typography.fontSize.sm
+      }}>
+        {getStatusIcon()}
       </div>
-      <div style={{ fontSize: '12px', color: '#666' }}>
-        {details}
-      </div>
-      {status === 'disconnected' && (
-        <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
-          Create a .env file with your API key or set REACT_APP_LLM_PROVIDER=mock
+      <div style={{ flex: 1 }}>
+        <div style={{ 
+          fontWeight: theme.typography.fontWeight.semibold,
+          marginBottom: '2px',
+          color: theme.colors.text.primary,
+          fontSize: theme.typography.fontSize.xs
+        }}>
+          {provider.toUpperCase()} Provider
         </div>
-      )}
+        <div style={{ 
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary 
+        }}>
+          {details}
+        </div>
+        {status === 'disconnected' && (
+          <div style={{ 
+            fontSize: '10px',
+            color: theme.colors.text.tertiary,
+            marginTop: '2px'
+          }}>
+            Set API key in .env or use mock mode
+          </div>
+        )}
+      </div>
     </div>
   );
 };

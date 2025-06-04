@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CrosswordGrid as CrosswordGridType, Direction, WordPlacement } from '../types/crossword';
 
+interface Theme {
+  colors: any;
+  typography: any;
+  spacing: any;
+  borderRadius: any;
+  shadow: any;
+}
+
 interface CrosswordGridProps {
   crossword: CrosswordGridType;
+  theme: Theme;
 }
 
 interface CellInfo {
@@ -17,7 +26,7 @@ interface HighlightedWord {
   wordIndex: number;
 }
 
-const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
+const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
   const [userGrid, setUserGrid] = useState<string[][]>([]);
   const [highlightedWord, setHighlightedWord] = useState<HighlightedWord | null>(null);
   const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
@@ -207,20 +216,32 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
     <div 
       className="crossword-container"
       tabIndex={0}
-      style={{ outline: 'none' }}
+      style={{ 
+        outline: 'none',
+        backgroundColor: theme.colors.background,
+        borderRadius: theme.borderRadius.xl,
+        border: `1px solid ${theme.colors.border}`,
+        boxShadow: theme.shadow.lg,
+        padding: theme.spacing.lg
+      }}
       onBlur={() => {
         // Clear selection when crossword loses focus
         setActiveCell(null);
         setHighlightedWord(null);
       }}
     >
-      <div className="crossword-grid">
+      <div className="crossword-grid" style={{
+        display: 'flex',
+        justifyContent: 'center'
+      }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${crossword.width}, 40px)`,
-          gap: '2px',
-          backgroundColor: '#000',
-          padding: '2px'
+          gridTemplateColumns: `repeat(${crossword.width}, 48px)`,
+          gap: '1px',
+          backgroundColor: theme.colors.text.primary,
+          padding: '1px',
+          borderRadius: theme.borderRadius.md,
+          boxShadow: theme.shadow.md
         }}>
           {crossword.grid.map((row, rowIndex) =>
             row.map((cell, colIndex) => {
@@ -233,34 +254,64 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword }) => {
                   key={`${rowIndex}-${colIndex}`}
                   onClick={() => handleCellClick(rowIndex, colIndex)}
                   style={{
-                    width: '40px',
-                    height: '40px',
+                    width: '48px',
+                    height: '48px',
                     backgroundColor: cellInfo.isBlank 
-                      ? (isActive ? '#4CAF50' : isHighlighted ? '#E3F2FD' : '#fff')
-                      : '#000',
-                    border: cellInfo.isBlank ? '1px solid #ccc' : 'none',
+                      ? (isActive 
+                          ? theme.colors.primary
+                          : isHighlighted 
+                            ? `${theme.colors.primary}20`
+                            : theme.colors.background)
+                      : theme.colors.text.primary,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
+                    fontSize: theme.typography.fontSize.lg,
+                    fontWeight: theme.typography.fontWeight.bold,
+                    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
                     cursor: cellInfo.isBlank ? 'pointer' : 'default',
-                    position: 'relative'
+                    position: 'relative',
+                    transition: 'all 0.15s ease',
+                    color: isActive 
+                      ? theme.colors.text.inverse 
+                      : theme.colors.text.primary,
+                    textTransform: 'uppercase',
+                    userSelect: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (cellInfo.isBlank && !isActive) {
+                      e.currentTarget.style.backgroundColor = `${theme.colors.primary}10`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (cellInfo.isBlank && !isActive) {
+                      e.currentTarget.style.backgroundColor = isHighlighted 
+                        ? `${theme.colors.primary}20`
+                        : theme.colors.background;
+                    }
                   }}
                 >
                   {cellInfo.number && (
                     <span style={{
                       position: 'absolute',
-                      top: '2px',
-                      left: '2px',
-                      fontSize: '10px',
-                      fontWeight: 'normal',
-                      color: '#666'
+                      top: '3px',
+                      left: '4px',
+                      fontSize: theme.typography.fontSize.xs,
+                      fontWeight: theme.typography.fontWeight.semibold,
+                      color: isActive 
+                        ? theme.colors.text.inverse 
+                        : theme.colors.text.secondary,
+                      lineHeight: '1',
+                      fontFamily: theme.typography.fontFamily
                     }}>
                       {cellInfo.number}
                     </span>
                   )}
-                  {cellInfo.isBlank && cellInfo.letter}
+                  <span style={{
+                    marginTop: cellInfo.number ? '6px' : '0'
+                  }}>
+                    {cellInfo.isBlank && cellInfo.letter}
+                  </span>
                 </div>
               );
             })

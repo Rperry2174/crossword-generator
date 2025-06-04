@@ -14,6 +14,69 @@ const App: React.FC = () => {
   const [currentCrosswordId, setCurrentCrosswordId] = useState<string | null>(null);
   const [clues, setClues] = useState<{ [word: string]: string }>({});
 
+  // Design system
+  const theme = {
+    colors: {
+      primary: '#2563eb',
+      primaryHover: '#1d4ed8',
+      secondary: '#64748b',
+      success: '#059669',
+      error: '#dc2626',
+      warning: '#d97706',
+      background: '#ffffff',
+      surface: '#f8fafc',
+      surfaceHover: '#f1f5f9',
+      border: '#e2e8f0',
+      borderLight: '#f1f5f9',
+      text: {
+        primary: '#0f172a',
+        secondary: '#475569',
+        tertiary: '#94a3b8',
+        inverse: '#ffffff'
+      }
+    },
+    typography: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      fontSize: {
+        xs: '12px',
+        sm: '14px',
+        base: '16px',
+        lg: '18px',
+        xl: '20px',
+        '2xl': '24px',
+        '3xl': '30px',
+        '4xl': '36px'
+      },
+      fontWeight: {
+        normal: 400,
+        medium: 500,
+        semibold: 600,
+        bold: 700
+      }
+    },
+    spacing: {
+      xs: '4px',
+      sm: '8px',
+      md: '16px',
+      lg: '24px',
+      xl: '32px',
+      '2xl': '48px',
+      '3xl': '64px'
+    },
+    borderRadius: {
+      sm: '6px',
+      md: '8px',
+      lg: '12px',
+      xl: '16px'
+    },
+    shadow: {
+      sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+      lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+      xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+    }
+  };
+
   // Check backend connectivity on component mount
   useEffect(() => {
     const checkBackend = async () => {
@@ -75,122 +138,286 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="App" style={{ 
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif',
-      maxWidth: '1200px',
-      margin: '0 auto'
+    <div style={{ 
+      minHeight: '100vh',
+      background: `linear-gradient(135deg, ${theme.colors.surface} 0%, ${theme.colors.background} 100%)`,
+      fontFamily: theme.typography.fontFamily,
+      fontSize: theme.typography.fontSize.base,
+      color: theme.colors.text.primary,
+      lineHeight: '1.6'
     }}>
-      <h1 style={{ marginBottom: '10px' }}>Dynamic Crossword Generator</h1>
-      <p style={{ marginBottom: '20px', color: '#666' }}>
-        Enter your own words to generate a custom crossword puzzle, or try the examples below.
-      </p>
-
-      {/* Backend status indicator */}
-      <div style={{
-        padding: '8px 12px',
-        borderRadius: '4px',
-        marginBottom: '20px',
-        backgroundColor: isBackendConnected ? '#e8f5e8' : '#fff3e0',
-        border: `1px solid ${isBackendConnected ? '#4caf50' : '#ff9800'}`,
-        fontSize: '14px'
+      {/* Header */}
+      <header style={{
+        borderBottom: `1px solid ${theme.colors.borderLight}`,
+        backgroundColor: theme.colors.background,
+        padding: `${theme.spacing.lg} 0`,
+        marginBottom: theme.spacing['2xl']
       }}>
-        Backend Status: {isBackendConnected ? '✅ Connected' : '⚠️ Disconnected (using sample data)'}
-        {!isBackendConnected && (
-          <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-            To use custom words, start the backend server: <code>cd backend && pipenv run python src/api.py</code>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: `0 ${theme.spacing.lg}`
+        }}>
+          <h1 style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            fontWeight: theme.typography.fontWeight.bold,
+            margin: 0,
+            marginBottom: theme.spacing.sm,
+            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            Crossword Studio
+          </h1>
+          <p style={{ 
+            fontSize: theme.typography.fontSize.lg,
+            color: theme.colors.text.secondary,
+            margin: 0,
+            fontWeight: theme.typography.fontWeight.normal
+          }}>
+            Create intelligent crossword puzzles with AI-powered clues
+          </p>
+        </div>
+      </header>
+
+      <main style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: `0 ${theme.spacing.lg}`
+      }}>
+        {/* Backend Status - Redesigned */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: theme.spacing.sm,
+          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+          borderRadius: theme.borderRadius.md,
+          marginBottom: theme.spacing.xl,
+          backgroundColor: isBackendConnected ? '#f0fdf4' : '#fffbeb',
+          border: `1px solid ${isBackendConnected ? '#bbf7d0' : '#fed7aa'}`,
+          fontSize: theme.typography.fontSize.sm
+        }}>
+          <div style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: isBackendConnected ? theme.colors.success : theme.colors.warning
+          }} />
+          <span style={{ fontWeight: theme.typography.fontWeight.medium }}>
+            {isBackendConnected ? 'Connected' : 'Offline Mode'}
+          </span>
+          <span style={{ color: theme.colors.text.tertiary }}>
+            {isBackendConnected ? 'All features available' : 'Using sample data'}
+          </span>
+        </div>
+
+        {/* Word Input Section */}
+        <section style={{ marginBottom: theme.spacing['2xl'] }}>
+          <WordInput 
+            onGenerateCrossword={handleGenerateCrossword} 
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            setError={setError}
+            theme={theme}
+          />
+        </section>
+
+        {/* Error Display - Redesigned */}
+        {error && (
+          <div style={{
+            padding: theme.spacing.md,
+            borderRadius: theme.borderRadius.md,
+            marginBottom: theme.spacing.xl,
+            backgroundColor: '#fef2f2',
+            border: `1px solid #fecaca`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: theme.spacing.sm
+          }}>
+            <div style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              backgroundColor: theme.colors.error,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              marginTop: '2px'
+            }}>
+              <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>!</span>
+            </div>
+            <div>
+              <div style={{ 
+                fontWeight: theme.typography.fontWeight.semibold,
+                color: theme.colors.error,
+                marginBottom: '4px'
+              }}>
+                Error
+              </div>
+              <div style={{ color: '#991b1b', fontSize: theme.typography.fontSize.sm }}>
+                {error}
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Word input form */}
-      <WordInput 
-        onGenerateCrossword={handleGenerateCrossword} 
-        isLoading={isLoading}
-        setIsLoading={setIsLoading}
-        setError={setError}
-      />
-
-      {/* Error display */}
-      {error && (
-        <div style={{
-          color: '#d32f2f',
-          marginBottom: '20px',
-          padding: '12px',
-          backgroundColor: '#ffebee',
-          border: '1px solid #ffcdd2',
-          borderRadius: '4px'
-        }}>
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {/* Loading indicator */}
-      {isLoading && (
-        <div style={{
-          textAlign: 'center',
-          padding: '20px',
-          fontSize: '16px',
-          color: '#666'
-        }}>
-          🧩 Generating your crossword puzzle...
-        </div>
-      )}
-
-      {/* Crossword display */}
-      {!isLoading && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-              Click on a square to start typing. Click again to switch between across and down.
-            </p>
-            
-            {currentCrosswordId && Object.keys(clues).length === 0 && (
-              <button
-                onClick={handleCheckPuzzle}
-                disabled={isLoading}
-                style={{
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 20px',
-                  borderRadius: '4px',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}
-              >
-                🔍 Check Puzzle
-              </button>
-            )}
-          </div>
-          
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
-            <CrosswordGrid 
-              key={`crossword-${crossword.word_placements.map(w => w.word).join('-')}`}
-              crossword={crossword} 
-            />
-            <ClueList 
-              key={`clues-${crossword.word_placements.map(w => w.word).join('-')}`}
-              wordPlacements={crossword.word_placements}
-              clues={clues}
-            />
-          </div>
-          
-          <div style={{ 
-            marginTop: '20px', 
-            padding: '15px', 
-            backgroundColor: '#f5f5f5',
-            borderRadius: '4px',
-            fontSize: '14px',
-            color: '#666'
+        {/* Loading State - Redesigned */}
+        {isLoading && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: theme.spacing['2xl'],
+            gap: theme.spacing.md
           }}>
-            <strong>Crossword Stats:</strong> {crossword.word_placements.length} words placed, 
-            using {crossword.word_placements.filter(w => w.direction?.toString() === 'horizontal').length} across 
-            and {crossword.word_placements.filter(w => w.direction?.toString() === 'vertical').length} down
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: `3px solid ${theme.colors.borderLight}`,
+              borderTop: `3px solid ${theme.colors.primary}`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{ 
+              color: theme.colors.text.secondary,
+              fontSize: theme.typography.fontSize.lg,
+              margin: 0,
+              fontWeight: theme.typography.fontWeight.medium
+            }}>
+              Generating your crossword puzzle...
+            </p>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
           </div>
-        </>
-      )}
+        )}
+
+        {/* Crossword Display */}
+        {!isLoading && (
+          <section>
+            {/* Action Bar */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: theme.spacing.lg,
+              padding: theme.spacing.md,
+              backgroundColor: theme.colors.background,
+              borderRadius: theme.borderRadius.lg,
+              border: `1px solid ${theme.colors.border}`,
+              boxShadow: theme.shadow.sm
+            }}>
+              <p style={{ 
+                margin: 0, 
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.sm
+              }}>
+                Click any square to start solving • Press Tab to change direction
+              </p>
+              
+              {currentCrosswordId && Object.keys(clues).length === 0 && (
+                <button
+                  onClick={handleCheckPuzzle}
+                  disabled={isLoading}
+                  style={{
+                    backgroundColor: theme.colors.primary,
+                    color: theme.colors.text.inverse,
+                    border: 'none',
+                    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                    borderRadius: theme.borderRadius.md,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    fontSize: theme.typography.fontSize.sm,
+                    fontWeight: theme.typography.fontWeight.semibold,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: theme.spacing.sm,
+                    transition: 'all 0.2s ease',
+                    boxShadow: theme.shadow.sm
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isLoading) {
+                      e.currentTarget.style.backgroundColor = theme.colors.primaryHover;
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = theme.shadow.md;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isLoading) {
+                      e.currentTarget.style.backgroundColor = theme.colors.primary;
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = theme.shadow.sm;
+                    }
+                  }}
+                >
+                  <span>🔍</span>
+                  Load Clues
+                </button>
+              )}
+            </div>
+            
+            {/* Main Content Grid */}
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              gap: theme.spacing['2xl'],
+              alignItems: 'flex-start'
+            }}>
+              <CrosswordGrid 
+                key={`crossword-${crossword.word_placements.map(w => w.word).join('-')}`}
+                crossword={crossword}
+                theme={theme}
+              />
+              <ClueList 
+                key={`clues-${crossword.word_placements.map(w => w.word).join('-')}`}
+                wordPlacements={crossword.word_placements}
+                clues={clues}
+                theme={theme}
+              />
+            </div>
+            
+            {/* Stats Card */}
+            <div style={{ 
+              marginTop: theme.spacing.xl,
+              padding: theme.spacing.lg,
+              backgroundColor: theme.colors.background,
+              borderRadius: theme.borderRadius.lg,
+              border: `1px solid ${theme.colors.border}`,
+              boxShadow: theme.shadow.sm
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.spacing['2xl'],
+                fontSize: theme.typography.fontSize.sm,
+                color: theme.colors.text.secondary
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: theme.colors.primary
+                  }} />
+                  <span><strong>{crossword.word_placements.length}</strong> words placed</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                  <span>→</span>
+                  <span><strong>{crossword.word_placements.filter(w => w.direction?.toString() === 'horizontal').length}</strong> across</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                  <span>↓</span>
+                  <span><strong>{crossword.word_placements.filter(w => w.direction?.toString() === 'vertical').length}</strong> down</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
     </div>
   );
 };

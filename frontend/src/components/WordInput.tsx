@@ -3,14 +3,23 @@ import TabContainer from './TabContainer';
 import TopicInput from './TopicInput';
 import { CrosswordAPI } from '../services/api';
 
+interface Theme {
+  colors: any;
+  typography: any;
+  spacing: any;
+  borderRadius: any;
+  shadow: any;
+}
+
 interface WordInputProps {
   onGenerateCrossword: (words: string[], crosswordId?: string) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string) => void;
+  theme: Theme;
 }
 
-const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, setIsLoading, setError }) => {
+const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, setIsLoading, setError, theme }) => {
   const [wordInput, setWordInput] = useState('');
   const [localError, setLocalError] = useState('');
 
@@ -75,18 +84,20 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, s
 
   // Custom words tab content
   const customWordsTab = (
-    <>
+    <div style={{ padding: theme.spacing.md }}>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: theme.spacing.lg }}>
           <label 
             htmlFor="wordInput" 
             style={{ 
               display: 'block', 
-              marginBottom: '5px',
-              fontWeight: 'bold'
+              marginBottom: theme.spacing.sm,
+              fontSize: theme.typography.fontSize.sm,
+              fontWeight: theme.typography.fontWeight.semibold,
+              color: theme.colors.text.primary
             }}
           >
-            Enter words (comma-separated):
+            Enter words (comma-separated)
           </label>
           <input
             id="wordInput"
@@ -97,26 +108,61 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, s
             disabled={isLoading}
             style={{
               width: '100%',
-              padding: '10px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              fontSize: '16px',
-              fontFamily: 'monospace'
+              padding: theme.spacing.md,
+              border: `2px solid ${localError ? theme.colors.error : theme.colors.border}`,
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.fontSize.base,
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              backgroundColor: theme.colors.background,
+              color: theme.colors.text.primary,
+              transition: 'all 0.2s ease',
+              outline: 'none'
+            }}
+            onFocus={(e) => {
+              if (!localError) {
+                e.target.style.borderColor = theme.colors.primary;
+                e.target.style.boxShadow = `0 0 0 3px ${theme.colors.primary}15`;
+              }
+            }}
+            onBlur={(e) => {
+              if (!localError) {
+                e.target.style.borderColor = theme.colors.border;
+                e.target.style.boxShadow = 'none';
+              }
             }}
           />
         </div>
 
         {localError && (
           <div style={{
-            color: '#d32f2f',
-            marginBottom: '15px',
-            padding: '8px',
-            backgroundColor: '#ffebee',
-            border: '1px solid #ffcdd2',
-            borderRadius: '4px',
-            fontSize: '14px'
+            padding: theme.spacing.md,
+            borderRadius: theme.borderRadius.md,
+            marginBottom: theme.spacing.lg,
+            backgroundColor: '#fef2f2',
+            border: `1px solid #fecaca`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: theme.spacing.sm
           }}>
-            {localError}
+            <div style={{
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: theme.colors.error,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              marginTop: '2px'
+            }}>
+              <span style={{ color: 'white', fontSize: '10px', fontWeight: 'bold' }}>!</span>
+            </div>
+            <div style={{ 
+              fontSize: theme.typography.fontSize.sm,
+              color: '#991b1b'
+            }}>
+              {localError}
+            </div>
           </div>
         )}
 
@@ -124,25 +170,52 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, s
           type="submit"
           disabled={isLoading}
           style={{
-            backgroundColor: isLoading ? '#ccc' : '#2196F3',
-            color: 'white',
+            backgroundColor: isLoading ? theme.colors.secondary : theme.colors.primary,
+            color: theme.colors.text.inverse,
             border: 'none',
-            padding: '10px 20px',
-            borderRadius: '4px',
+            padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+            borderRadius: theme.borderRadius.md,
             cursor: isLoading ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
+            fontSize: theme.typography.fontSize.base,
+            fontWeight: theme.typography.fontWeight.semibold,
+            transition: 'all 0.2s ease',
+            boxShadow: theme.shadow.sm,
+            width: '100%'
+          }}
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = theme.colors.primaryHover;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = theme.shadow.md;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = theme.colors.primary;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = theme.shadow.sm;
+            }
           }}
         >
           {isLoading ? 'Generating...' : 'Generate Crossword'}
         </button>
       </form>
 
-      <div style={{ marginTop: '20px' }}>
-        <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
-          <strong>Examples to try:</strong>
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+      <div style={{ marginTop: theme.spacing.xl }}>
+        <h4 style={{ 
+          margin: `0 0 ${theme.spacing.md} 0`, 
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.secondary,
+          fontWeight: theme.typography.fontWeight.semibold,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em'
+        }}>
+          Quick Examples
+        </h4>
+        <div style={{ 
+          display: 'grid',
+          gap: theme.spacing.sm
+        }}>
           {exampleWords.map((example, index) => (
             <button
               key={index}
@@ -151,14 +224,29 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, s
               disabled={isLoading}
               style={{
                 textAlign: 'left',
-                padding: '5px 8px',
-                border: '1px solid #ddd',
-                borderRadius: '3px',
-                backgroundColor: 'white',
+                padding: theme.spacing.sm,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.sm,
+                backgroundColor: theme.colors.background,
                 cursor: isLoading ? 'not-allowed' : 'pointer',
-                fontSize: '12px',
-                fontFamily: 'monospace',
-                color: '#333'
+                fontSize: theme.typography.fontSize.xs,
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                color: theme.colors.text.secondary,
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = theme.colors.surfaceHover;
+                  e.currentTarget.style.borderColor = theme.colors.primary;
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = theme.colors.background;
+                  e.currentTarget.style.borderColor = theme.colors.border;
+                  e.currentTarget.style.color = theme.colors.text.secondary;
+                }
               }}
             >
               {example}
@@ -166,35 +254,59 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, s
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (
     <div style={{
-      marginBottom: '30px',
-      padding: '20px',
-      border: '1px solid #ddd',
-      borderRadius: '8px',
-      backgroundColor: '#f9f9f9'
+      backgroundColor: theme.colors.background,
+      borderRadius: theme.borderRadius.xl,
+      border: `1px solid ${theme.colors.border}`,
+      boxShadow: theme.shadow.lg,
+      overflow: 'hidden'
     }}>
-      <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Generate Crossword Puzzle</h3>
+      <div style={{
+        padding: theme.spacing.lg,
+        borderBottom: `1px solid ${theme.colors.borderLight}`
+      }}>
+        <h2 style={{ 
+          margin: 0,
+          fontSize: theme.typography.fontSize.xl,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.text.primary
+        }}>
+          Create Your Crossword
+        </h2>
+        <p style={{
+          margin: `${theme.spacing.sm} 0 0 0`,
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.secondary,
+          lineHeight: '1.5'
+        }}>
+          Generate from a topic with AI clues, or input your own words
+        </p>
+      </div>
       
       <TabContainer
         defaultTab="topic"
+        theme={theme}
         tabs={[
           {
             id: 'topic',
-            label: '🎯 From Topic',
+            label: 'From Topic',
+            icon: '🎯',
             content: (
               <TopicInput 
                 onGenerateFromTopic={handleTopicGeneration}
                 isLoading={isLoading}
+                theme={theme}
               />
             )
           },
           {
             id: 'custom',
-            label: '✏️ Custom Words',
+            label: 'Custom Words',
+            icon: '✏️',
             content: customWordsTab
           }
         ]}
