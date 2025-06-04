@@ -8,6 +8,7 @@ class CrosswordGenerator:
         self.words = [word.upper() for word in words]
         self.grid_size = grid_size
         self.max_unintended_words = max(1, len(words) // 5)  # 1 unintended word per 5 intended
+        self.debug_mode = False  # Set to True for debugging output
     
     def find_intersections(self, word1: str, word2: str) -> List[Tuple[int, int]]:
         """Find all possible intersection points between two words
@@ -48,6 +49,10 @@ class CrosswordGenerator:
         # Check perpendicular word formation if we have existing placements
         if word_placements and len(word_placements) > 0:
             if not self._is_valid_perpendicular_placement(grid, word, start_row, start_col, direction):
+                return False
+            
+            # Check for word boundary violations (merging words)
+            if not self._check_word_boundaries(grid, word, start_row, start_col, direction):
                 return False
             
             # Ensure connectivity (word must intersect with existing words)
@@ -211,52 +216,65 @@ class CrosswordGenerator:
         """Extract all words that would be formed perpendicular to the placed word"""
         perpendicular_words = []
         
+        # Create a test grid with the word placed
+        test_grid = [row[:] for row in grid]  # Deep copy
         for i in range(len(word)):
             if direction == Direction.HORIZONTAL:
-                # Check vertical word formation at each letter position
+                test_grid[start_row][start_col + i] = word[i]
+            else:
+                test_grid[start_row + i][start_col] = word[i]
+        
+        # Check each letter position for perpendicular word formation
+        for i in range(len(word)):
+            if direction == Direction.HORIZONTAL:
+                # Check vertical words at each column
                 col = start_col + i
                 
-                # Find start of vertical word
-                word_start = start_row
-                while word_start > 0 and (grid[word_start - 1][col] is not None or word_start - 1 == start_row):
-                    word_start -= 1
+                # Find start of any vertical word containing this position
+                word_start_row = start_row
+                while (word_start_row > 0 and 
+                       test_grid[word_start_row - 1][col] is not None):
+                    word_start_row -= 1
                 
-                # Build vertical word
-                vertical_word = ""
-                row = word_start
-                while (row < self.grid_size and 
-                       (grid[row][col] is not None or row == start_row)):
-                    if row == start_row:
-                        vertical_word += word[i]  # The letter we're placing
-                    else:
-                        vertical_word += grid[row][col]
-                    row += 1
+                # Find end of vertical word
+                word_end_row = start_row
+                while (word_end_row < self.grid_size - 1 and 
+                       test_grid[word_end_row + 1][col] is not None):
+                    word_end_row += 1
                 
-                if len(vertical_word) > 1:
-                    perpendicular_words.append(vertical_word)
+                # Build the vertical word if it's longer than 1 character
+                if word_end_row > word_start_row:
+                    vertical_word = ""
+                    for row in range(word_start_row, word_end_row + 1):
+                        vertical_word += test_grid[row][col]
+                    
+                    if len(vertical_word) > 1:
+                        perpendicular_words.append(vertical_word)
             
-            else:  # VERTICAL
-                # Check horizontal word formation at each letter position
+            else:  # VERTICAL placement
+                # Check horizontal words at each row
                 row = start_row + i
                 
-                # Find start of horizontal word
-                word_start = start_col
-                while word_start > 0 and (grid[row][word_start - 1] is not None or word_start - 1 == start_col):
-                    word_start -= 1
+                # Find start of any horizontal word containing this position
+                word_start_col = start_col
+                while (word_start_col > 0 and 
+                       test_grid[row][word_start_col - 1] is not None):
+                    word_start_col -= 1
                 
-                # Build horizontal word
-                horizontal_word = ""
-                col = word_start
-                while (col < self.grid_size and 
-                       (grid[row][col] is not None or col == start_col)):
-                    if col == start_col:
-                        horizontal_word += word[i]  # The letter we're placing
-                    else:
-                        horizontal_word += grid[row][col]
-                    col += 1
+                # Find end of horizontal word
+                word_end_col = start_col
+                while (word_end_col < self.grid_size - 1 and 
+                       test_grid[row][word_end_col + 1] is not None):
+                    word_end_col += 1
                 
-                if len(horizontal_word) > 1:
-                    perpendicular_words.append(horizontal_word)
+                # Build the horizontal word if it's longer than 1 character
+                if word_end_col > word_start_col:
+                    horizontal_word = ""
+                    for col in range(word_start_col, word_end_col + 1):
+                        horizontal_word += test_grid[row][col]
+                    
+                    if len(horizontal_word) > 1:
+                        perpendicular_words.append(horizontal_word)
         
         return perpendicular_words
     
@@ -266,13 +284,20 @@ class CrosswordGenerator:
         """Check if placing word creates valid perpendicular words"""
         perpendicular_words = self._extract_perpendicular_words(grid, word, start_row, start_col, direction)
         
+        # Remove duplicates
+        unique_perpendicular_words = list(set(perpendicular_words))
+        
         unintended_words = []
-        for perp_word in perpendicular_words:
+        for perp_word in unique_perpendicular_words:
             if perp_word not in self.words:
                 unintended_words.append(perp_word)
         
-        # Allow up to max_unintended_words unintended words
-        return len(unintended_words) <= self.max_unintended_words
+        # Debug output for testing
+        if unintended_words:
+            print(f"Placing '{word}' would create unintended words: {unintended_words}")
+        
+        # For now, require ALL perpendicular words to be valid (strict mode)
+        return len(unintended_words) == 0
     
     def _is_connected_to_existing(self, grid: List[List[Optional[str]]], 
                                 word: str, start_row: int, start_col: int, 
@@ -289,3 +314,30 @@ class CrosswordGenerator:
                 return True
         
         return False
+    
+    def _check_word_boundaries(self, grid: List[List[Optional[str]]], 
+                             word: str, start_row: int, start_col: int, 
+                             direction: Direction) -> bool:
+        """Check that placing word doesn't merge with adjacent words"""
+        
+        if direction == Direction.HORIZONTAL:
+            # Check before the word starts
+            if start_col > 0 and grid[start_row][start_col - 1] is not None:
+                return False
+            
+            # Check after the word ends
+            end_col = start_col + len(word) - 1
+            if end_col < self.grid_size - 1 and grid[start_row][end_col + 1] is not None:
+                return False
+                
+        else:  # VERTICAL
+            # Check before the word starts
+            if start_row > 0 and grid[start_row - 1][start_col] is not None:
+                return False
+            
+            # Check after the word ends
+            end_row = start_row + len(word) - 1
+            if end_row < self.grid_size - 1 and grid[end_row + 1][start_col] is not None:
+                return False
+        
+        return True
