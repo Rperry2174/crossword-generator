@@ -1,21 +1,25 @@
 import React from 'react';
 import CrosswordGrid from './components/CrosswordGrid';
-import { CrosswordGrid as CrosswordGridType, Direction } from './types/crossword';
+import ClueList from './components/ClueList';
+import { stubGrid } from './data/stubGrid';
 
 const App: React.FC = () => {
-  // Sample crossword data for demonstration
-  const sampleCrossword: CrosswordGridType = {
-    grid: Array(15).fill(null).map(() => Array(15).fill(null)),
-    width: 15,
-    height: 15,
-    word_placements: []
-  };
-
   return (
-    <div className="App" style={{ padding: '20px' }}>
-      <h1>Crossword Puzzle Generator</h1>
-      <p>Phase 1: Basic crossword algorithm demonstration</p>
-      <CrosswordGrid crossword={sampleCrossword} />
+    <div className="App" style={{ 
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    }}>
+      <h1 style={{ marginBottom: '10px' }}>Interactive Crossword Puzzle</h1>
+      <p style={{ marginBottom: '30px', color: '#666' }}>
+        Click on a square to start typing. Click again to switch between across and down.
+      </p>
+      
+      <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
+        <CrosswordGrid crossword={stubGrid} />
+        <ClueList wordPlacements={stubGrid.word_placements} />
+      </div>
     </div>
   );
 };

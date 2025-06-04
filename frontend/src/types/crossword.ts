@@ -9,6 +9,7 @@ export interface WordPlacement {
   start_col: number;
   direction: Direction;
   clue?: string;
+  number?: number;
 }
 
 export interface CrosswordGrid {
@@ -16,4 +17,18 @@ export interface CrosswordGrid {
   width: number;
   height: number;
   word_placements: WordPlacement[];
+}
+
+export interface CrosswordClue {
+  number: number;
+  word: string;
+  direction: Direction;
+  clue: string;
+}
+
+export interface CellState {
+  letter: string;
+  isHighlighted: boolean;
+  isActive: boolean;
+  number?: number;
 }
