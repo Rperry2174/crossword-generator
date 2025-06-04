@@ -65,7 +65,10 @@ Now generate 30 word-clue pairs for the topic: "{topic}\""""
             else:
                 return LLMService._get_mock_word_clues(topic)
         except Exception as e:
-            print(f"LLM API failed: {e}, falling back to mock")
+            print(f"LLM API failed: {e}")
+            print(f"Provider: {config['provider']}")
+            print(f"API key present: {bool(config.get('openai_key' if config['provider'] == 'openai' else 'anthropic_key'))}")
+            print("Falling back to mock")
             return LLMService._get_mock_word_clues(topic)
     
     @staticmethod

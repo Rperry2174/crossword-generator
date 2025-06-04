@@ -260,7 +260,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
                       ? (isActive 
                           ? theme.colors.primary
                           : isHighlighted 
-                            ? `${theme.colors.primary}20`
+                            ? '#e0f2fe'  // Light blue background for better readability
                             : theme.colors.background)
                       : theme.colors.text.primary,
                     display: 'flex',
@@ -280,13 +280,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
                   }}
                   onMouseEnter={(e) => {
                     if (cellInfo.isBlank && !isActive) {
-                      e.currentTarget.style.backgroundColor = `${theme.colors.primary}10`;
+                      e.currentTarget.style.backgroundColor = isHighlighted ? '#b3e5fc' : '#f5f5f5';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (cellInfo.isBlank && !isActive) {
                       e.currentTarget.style.backgroundColor = isHighlighted 
-                        ? `${theme.colors.primary}20`
+                        ? '#e0f2fe'
                         : theme.colors.background;
                     }
                   }}

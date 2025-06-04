@@ -93,20 +93,30 @@ const App: React.FC = () => {
     try {
       const newCrossword = await CrosswordAPI.generateCrossword(words);
       console.log('New crossword generated:', newCrossword.word_placements.length, 'words');
+      console.log('Crossword ID provided:', crosswordId);
+      
       setCrossword(newCrossword);
       setCurrentCrosswordId(crosswordId || null);
-      setClues({}); // Clear previous clues
+      
+      // Always clear previous clues first
+      console.log('Clearing previous clues...');
+      setClues({});
       
       // Automatically load clues if crossword_id is available
       if (crosswordId) {
+        console.log('Auto-loading clues for crossword ID:', crosswordId);
         try {
           const retrievedClues = await CrosswordAPI.getClues(crosswordId);
-          setClues(retrievedClues);
           console.log('Auto-loaded clues:', Object.keys(retrievedClues).length, 'clues');
+          console.log('Clue sample:', Object.entries(retrievedClues).slice(0, 3));
+          setClues(retrievedClues);
         } catch (clueError) {
           console.warn('Failed to auto-load clues:', clueError);
-          // Don't set error here, just continue without clues
+          // Ensure clues are empty if loading fails
+          setClues({});
         }
+      } else {
+        console.log('No crossword ID provided, clues will remain empty');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate crossword');
@@ -373,7 +383,7 @@ const App: React.FC = () => {
                 theme={theme}
               />
               <ClueList 
-                key={`clues-${crossword.word_placements.map(w => w.word).join('-')}`}
+                key={`clues-${crossword.word_placements.map(w => w.word).join('-')}-${Object.keys(clues).length}-${currentCrosswordId || 'no-id'}`}
                 wordPlacements={crossword.word_placements}
                 clues={clues}
                 theme={theme}
