@@ -1,187 +1,303 @@
-# Dynamic Crossword Generator
+# Crossword Studio
 
-An AI-powered crossword puzzle generator that creates interactive puzzles from any topic using LLM technology.
+A professional AI-powered crossword puzzle generator with interactive solving features. Generate topic-based puzzles, solve them with real-time validation, and enjoy a polished user experience comparable to premium puzzle applications.
 
-## Features
+## ✨ Features
 
-- **Topic-Based Generation**: Enter any topic (e.g., "Basketball", "The Office") and get 30 related crossword words
-- **Multiple LLM Providers**: Supports OpenAI, Anthropic Claude, Ollama (local), and mock data
-- **Interactive Crosswords**: Click-to-type interface with direction switching
-- **Custom Word Lists**: Manual word input for advanced users
-- **Robust Validation**: Algorithm ensures valid crossword structure with proper word intersections
-- **Real-time Generation**: See crosswords created live from your topics
+### 🎯 **Smart Puzzle Generation**
+- **Topic-Based Creation**: Enter any topic (e.g., "The Office", "Basketball") and get AI-generated crosswords
+- **Multiple LLM Providers**: OpenAI, Anthropic Claude, Ollama (local), or mock data
+- **Intelligent Word Placement**: Advanced algorithm ensures valid crossword structure
 
-## Quick Start
+### 🎮 **Interactive Solving Experience**
+- **Click-to-Type Interface**: Professional crossword solving with keyboard navigation
+- **Real-Time Validation**: Check puzzle progress with error highlighting
+- **Progressive Assistance**: Check answers or reveal complete solution
+- **Visual Feedback**: Completion percentage and professional error states
 
-### Frontend Setup
+### 🎨 **Professional UI/UX**
+- **Commercial-Grade Design**: Modern interface with consistent design system
+- **Responsive Layout**: Optimized for desktop and mobile devices
+- **Accessibility Features**: WCAG AA compliant with proper contrast and focus management
+
+## 🚀 Quick Start
+
+### Option 1: Docker (Recommended)
+
+The easiest way to run the entire application:
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/Rperry2174/crossword-generator.git
+cd crossword-generator
+
+# 2. Set up environment variables
+cp .env.template .env
+nano .env  # Add your API keys (see configuration below)
+
+# 3. Start with Docker Compose
+docker-compose up -d
+
+# 4. Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
+
+### Option 2: Development Setup
+
+For development with hot reloading:
+
+```bash
+# Backend
+cd backend
+pipenv install
+cp .env.template .env  # Add your API keys
+pipenv run python start_server.py
+
+# Frontend (in separate terminal)
 cd frontend
 npm install
-cp .env.example .env
-# Edit .env with your API keys (see LLM Configuration below)
 npm start
 ```
 
-### Backend Setup
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file in the **root directory** (same level as docker-compose.yml):
+
+#### OpenAI (Recommended)
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-proj-your-openai-api-key-here
+```
+
+#### Anthropic Claude
+```env
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-api-key-here
+```
+
+#### Local Ollama
+```env
+LLM_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+#### Mock Mode (No API Keys Required)
+```env
+LLM_PROVIDER=mock
+```
+
+### Docker Compose Files
+
+- **`docker-compose.yml`**: Main configuration for all environments
+- **`docker-compose.override.yml`**: Development overrides (hot reloading, debug mode)
+- **`docker-compose.prod.yml`**: Production optimizations (multi-worker, resource limits)
+
+#### Development Mode (Default)
 ```bash
-cd backend
-pipenv install
-pipenv run python start_server.py
+docker-compose up  # Uses main + override files automatically
 ```
 
-## LLM Configuration
-
-Create a `.env` file in the `frontend` directory:
-
-### Option 1: OpenAI (Recommended)
-```env
-REACT_APP_LLM_PROVIDER=openai
-REACT_APP_OPENAI_API_KEY=your_openai_api_key_here
-REACT_APP_OPENAI_MODEL=gpt-3.5-turbo
+#### Production Mode
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-### Option 2: Anthropic Claude
-```env
-REACT_APP_LLM_PROVIDER=anthropic
-REACT_APP_ANTHROPIC_API_KEY=your_anthropic_api_key_here
-REACT_APP_ANTHROPIC_MODEL=claude-3-haiku-20240307
+## 🎯 How It Works
+
+### 1. **Topic Input → AI Processing**
+
+**User Input:**
+```
+Topic: "The Office"
 ```
 
-### Option 3: Local Ollama
-```env
-REACT_APP_LLM_PROVIDER=ollama
-REACT_APP_OLLAMA_BASE_URL=http://localhost:11434
-REACT_APP_OLLAMA_MODEL=llama2
+**AI Generation:**
+- Sends topic to configured LLM provider
+- Generates 30 topic-related words with clues
+- Returns structured data for crossword creation
+
+**Example Output:**
+```
+Words: DWIGHT,JIM,PAM,MICHAEL,ANGELA,KEVIN,OSCAR,STANLEY...
+Clues: "Dwight" → "Beet farmer and assistant manager"
 ```
 
-### Option 4: Mock Data (No API Key Required)
-```env
-REACT_APP_LLM_PROVIDER=mock
+### 2. **Crossword Generation**
+- Advanced placement algorithm creates 15x15 grid
+- Ensures proper word intersections and connectivity
+- Validates no invalid word formations
+- Assigns numbers for across/down clues
+
+### 3. **Interactive Solving**
+- Professional crossword interface with click-to-type
+- Real-time validation with error highlighting
+- Progressive assistance (check → reveal)
+- Completion tracking and statistics
+
+## 🏗️ Architecture
+
+### **Frontend (React + TypeScript)**
+```
+src/
+├── components/
+│   ├── CrosswordGrid.tsx    # Interactive puzzle interface
+│   ├── ClueList.tsx         # Professional clue display
+│   ├── WordInput.tsx        # Topic/custom word input
+│   └── TopicInput.tsx       # AI topic generation
+├── services/
+│   └── api.ts              # Backend API client
+└── types/
+    └── crossword.ts        # TypeScript interfaces
 ```
 
-## How It Works
-
-### 1. Topic Input → LLM Processing
-**Input Example:**
+### **Backend (Python + FastAPI)**
 ```
-Topic: "Basketball"
-```
-
-**LLM Prompt Template:**
-```
-You are helping create a crossword puzzle. Generate exactly 30 words related to the topic "Basketball".
-
-Requirements:
-- Words should be 3-15 letters long
-- Use common English words that most people would know
-- Choose words with good crossword potential (mix of vowels and consonants)
-- Avoid proper nouns, acronyms, or very technical terms
-- Return ONLY the words in uppercase, separated by commas
-- No explanations, just the comma-separated word list
-
-Example Output: BASKETBALL,PLAYER,COURT,HOOP,DUNK,SCORE,TEAM,COACH,REFEREE,FOUL,TIMEOUT,QUARTER,POINT,GUARD,FORWARD,CENTER,REBOUND,ASSIST,STEAL,BLOCK,SHOT,LAYUP,JERSEY,ARENA,PLAYOFFS,CHAMPIONSHIP,LEAGUE,DRAFT,ROOKIE,VETERAN
+src/
+├── api.py                  # REST API endpoints
+├── crossword_generator.py  # Core crossword algorithm
+├── llm_service.py         # AI provider integration
+└── models.py              # Data structures
 ```
 
-### 2. Word Validation → Crossword Generation
-- Backend receives comma-separated word list
-- Crossword algorithm creates valid 15x15 grid
-- Words placed with proper intersections and no conflicts
-- Returns grid data with word positions and numbers
+### **Docker Architecture**
+```
+┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │
+│   (React/Nginx) │◄──►│   (FastAPI)     │
+│   Port: 3000    │    │   Port: 8000    │
+└─────────────────┘    └─────────────────┘
+```
 
-### 3. Interactive Puzzle Display
-- Real-time crossword rendering
-- Click-to-type functionality
-- Direction switching (across/down)
-- Numbered clue lists
+## 🎮 Usage Examples
 
-## Architecture
-
-### Frontend (React + TypeScript)
-- **Components**: Tabbed interface, LLM status indicators, interactive grid
-- **Services**: LLM API integration, crossword API client
-- **State Management**: Real-time crossword updates, loading states
-
-### Backend (Python + FastAPI)
-- **Crossword Algorithm**: Robust word placement with validation
-- **API Endpoints**: Word list processing, crossword generation
-- **Validation**: Prevents invalid word formations and ensures connectivity
-
-### LLM Integration
-- **Multi-Provider Support**: OpenAI, Anthropic, Ollama, Mock
-- **Robust Parsing**: Extracts words from various LLM response formats
-- **Fallback Strategy**: Mock data if API calls fail
-- **Secure Configuration**: Environment variable API key management
-
-## Example Workflows
-
-### Popular Topics Ready to Try:
-- **TV Shows**: "The Office", "Friends", "Breaking Bad"
-- **Sports**: "Basketball", "Soccer", "Olympics"  
+### **Popular Topics to Try:**
+- **TV Shows**: "The Office", "Friends", "Breaking Bad", "Game of Thrones"
+- **Sports**: "Basketball", "Soccer", "Olympics", "Tennis"  
+- **Movies**: "Harry Potter", "Star Wars", "Marvel", "Disney"
 - **History**: "World War II", "Ancient Rome", "Space Exploration"
-- **Entertainment**: "Harry Potter", "Star Wars", "Marvel"
+- **Science**: "Chemistry", "Biology", "Physics", "Astronomy"
 
-### Custom Word Lists:
-Switch to "Custom Words" tab for manual word entry like:
+### **Interactive Features:**
+1. **Generate**: Enter topic → Get AI-powered crossword
+2. **Solve**: Click cells → Type letters → Navigate with Tab/Arrow keys
+3. **Check**: Validate progress → See completion percentage → Highlight errors
+4. **Reveal**: Get complete solution when stuck
+
+### **Custom Word Lists:**
+Switch to "Custom Words" tab for manual entry:
 ```
-PYTHON,CODE,TEST,GRID,WORD,PLACE,CROSS
+REACT,DOCKER,PYTHON,TYPESCRIPT,FASTAPI,NGINX,CONTAINER
 ```
 
-## Development
+## 🛠️ Development
 
-### Project Structure
+### **Project Structure**
 ```
 crossword-generator/
-├── frontend/          # React TypeScript app
-│   ├── src/
-│   │   ├── components/    # UI components
-│   │   ├── services/      # API integration
-│   │   └── types/         # TypeScript interfaces
-├── backend/           # Python FastAPI server
-│   ├── src/
-│   │   ├── api.py        # REST endpoints
-│   │   ├── crossword_generator.py  # Core algorithm
-│   │   └── models.py     # Data structures
-└── prompts/           # Development documentation
+├── frontend/              # React application
+│   ├── src/components/    # UI components
+│   ├── Dockerfile         # Frontend container
+│   └── nginx.conf         # Production web server
+├── backend/               # Python API
+│   ├── src/              # Application code
+│   ├── Dockerfile        # Backend container
+│   └── .env              # Backend environment
+├── docker-compose.yml    # Container orchestration
+├── .env.template         # Environment template
+└── prompts/              # Development documentation
 ```
 
-### Testing
+### **Running Tests**
 ```bash
 # Backend tests
 cd backend && pipenv run pytest tests/ -v
 
-# Frontend development
+# Frontend development server
 cd frontend && npm start
 
-# Test LLM integration
-# Set REACT_APP_LLM_PROVIDER=mock for testing without API keys
+# Docker development mode
+docker-compose up  # Includes hot reloading
 ```
 
-## Deployment
+### **Development Workflow**
+1. **Hot Reloading**: Code changes automatically reload in Docker
+2. **Debug Mode**: Backend runs with detailed logging
+3. **Development Volumes**: Source code mounted for instant updates
 
-### Environment Variables
-- `REACT_APP_LLM_PROVIDER`: LLM service to use
-- `REACT_APP_OPENAI_API_KEY`: OpenAI API key
-- `REACT_APP_ANTHROPIC_API_KEY`: Anthropic API key
-- `REACT_APP_OLLAMA_BASE_URL`: Ollama server URL
+## 🚀 Deployment
 
-### Production Notes
-- Store API keys securely
-- Configure CORS for production domains
-- Consider rate limiting for LLM API calls
-- Cache common topic results
+### **Docker Commands**
+```bash
+# Development
+docker-compose up -d
 
-## Contributing
+# Production
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### **Environment Requirements**
+- **Docker**: 20.10+
+- **Docker Compose**: 2.0+
+- **API Keys**: OpenAI or Anthropic (or use mock mode)
+
+### **Production Considerations**
+- **Security**: API keys in environment variables only
+- **Scaling**: Multi-worker backend configuration available
+- **Monitoring**: Built-in health checks for all services
+- **Performance**: Nginx optimization with caching and compression
+
+## 📚 Documentation
+
+### **Detailed Guides**
+- **[DOCKER.md](./DOCKER.md)**: Complete containerization guide
+- **[prompts/](./prompts/)**: Development documentation and implementation details
+
+### **API Documentation**
+- **Interactive Docs**: http://localhost:8000/docs (when running)
+- **Health Check**: http://localhost:8000/health
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Make changes with tests
+4. Run the test suite
 5. Submit pull request
 
-## License
+### **Development Setup**
+```bash
+git clone https://github.com/Rperry2174/crossword-generator.git
+cd crossword-generator
+cp .env.template .env  # Configure with your API keys
+docker-compose up      # Start development environment
+```
 
-MIT License - See LICENSE file for details
+## 📄 License
+
+MIT License - See [LICENSE](./LICENSE) file for details.
+
+## 🏆 Achievements
+
+This project demonstrates:
+- ✅ **Commercial-grade UI/UX** comparable to professional puzzle applications
+- ✅ **Modern containerization** with Docker best practices
+- ✅ **AI integration** with multiple LLM providers
+- ✅ **Interactive puzzle solving** with real-time validation
+- ✅ **Professional architecture** with clean separation of concerns
+- ✅ **Production-ready deployment** with scaling and monitoring
 
 ---
 
-🧩 **Built with Claude Code** - Demonstrating the power of AI-assisted development
+🧩 **Crossword Studio** - Where AI meets classic puzzle-solving fun!
+
+Built with modern development practices and AI-assisted programming.
