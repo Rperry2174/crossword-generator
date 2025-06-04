@@ -1,0 +1,24 @@
+# Development overrides for docker-compose
+# This file is automatically merged with docker-compose.yml when running docker-compose
+
+version: '3.8'
+
+services:
+  backend:
+    # Enable hot reloading for development
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/.env:/app/.env:ro
+    environment:
+      # Development environment variables
+      - PYTHONUNBUFFERED=1
+      - UVICORN_RELOAD=true
+    command: ["python", "-m", "uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    # For development, you might want to run the frontend locally instead
+    # Comment out this service and run 'npm start' locally for hot reloading
+    # or use the development Dockerfile with hot reloading enabled
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import LLMStatus from './LLMStatus';
 
 interface Theme {
   colors: any;
@@ -47,13 +46,9 @@ const TopicInput: React.FC<TopicInputProps> = ({ onGenerateFromTopic, isLoading,
     'Rock Music'
   ];
 
-  const llmProvider = process.env.REACT_APP_LLM_PROVIDER || 'mock';
-
   return (
     <div style={{ padding: theme.spacing.md }}>
-      <LLMStatus provider={llmProvider} theme={theme} />
-      
-      <form onSubmit={handleSubmit} style={{ marginTop: theme.spacing.lg }}>
+      <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: theme.spacing.lg }}>
           <label 
             htmlFor="topicInput" 

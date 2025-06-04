@@ -40,7 +40,8 @@ export interface CluesResponse {
   message: string;
 }
 
-const API_BASE_URL = 'http://localhost:8000';
+// API base URL - uses /api prefix when in production (proxied by nginx), localhost for development
+const API_BASE_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8000';
 
 export class CrosswordAPI {
   static async generateCrossword(words: string[]): Promise<CrosswordGrid> {
