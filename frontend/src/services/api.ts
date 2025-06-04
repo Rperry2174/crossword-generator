@@ -30,6 +30,14 @@ export interface TopicWordsResponse {
   topic: string;
   success: boolean;
   message: string;
+  crossword_id?: string;
+}
+
+export interface CluesResponse {
+  clues: { [word: string]: string };
+  crossword_id: string;
+  success: boolean;
+  message: string;
 }
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -72,7 +80,7 @@ export class CrosswordAPI {
     return crosswordGrid;
   }
 
-  static async generateWordsFromTopic(topic: string): Promise<string[]> {
+  static async generateWordsFromTopic(topic: string): Promise<{words: string[], crosswordId?: string}> {
     const response = await fetch(`${API_BASE_URL}/generate-from-topic`, {
       method: 'POST',
       headers: {
@@ -92,7 +100,32 @@ export class CrosswordAPI {
       throw new Error(data.message);
     }
 
-    return data.words;
+    return {
+      words: data.words,
+      crosswordId: data.crossword_id
+    };
+  }
+
+  static async getClues(crosswordId: string): Promise<{ [word: string]: string }> {
+    const response = await fetch(`${API_BASE_URL}/clues/${crosswordId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    const data: CluesResponse = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message);
+    }
+
+    return data.clues;
   }
 
   static async healthCheck(): Promise<boolean> {

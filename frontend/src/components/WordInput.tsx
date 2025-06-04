@@ -4,7 +4,7 @@ import TopicInput from './TopicInput';
 import { CrosswordAPI } from '../services/api';
 
 interface WordInputProps {
-  onGenerateCrossword: (words: string[]) => void;
+  onGenerateCrossword: (words: string[], crosswordId?: string) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string) => void;
@@ -57,8 +57,8 @@ const WordInput: React.FC<WordInputProps> = ({ onGenerateCrossword, isLoading, s
     setError('');
     
     try {
-      const words = await CrosswordAPI.generateWordsFromTopic(topic);
-      onGenerateCrossword(words);
+      const result = await CrosswordAPI.generateWordsFromTopic(topic);
+      onGenerateCrossword(result.words, result.crosswordId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate words from topic');
     } finally {

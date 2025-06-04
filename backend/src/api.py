@@ -1,13 +1,17 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 import json
+import uuid
 from src.crossword_generator import CrosswordGenerator
 from src.models import Direction
 from src.llm_service import LLMService
 
 app = FastAPI(title="Crossword Generator API", version="1.0.0")
+
+# In-memory storage for clue data (could be replaced with Redis/database in production)
+clue_storage: Dict[str, Dict[str, str]] = {}
 
 # Add CORS middleware to allow frontend requests
 app.add_middleware(
@@ -29,6 +33,17 @@ class TopicWordsResponse(BaseModel):
     topic: str
     success: bool
     message: str
+    crossword_id: Optional[str] = None
+
+class ClueData(BaseModel):
+    word: str
+    clue: str
+
+class CluesResponse(BaseModel):
+    clues: Dict[str, str]  # word -> clue mapping
+    crossword_id: str
+    success: bool
+    message: str
 
 class WordPlacementResponse(BaseModel):
     word: str
@@ -44,6 +59,7 @@ class CrosswordResponse(BaseModel):
     word_placements: List[WordPlacementResponse]
     success: bool
     message: str
+    crossword_id: Optional[str] = None
 
 @app.get("/")
 async def root():
@@ -146,14 +162,25 @@ async def generate_words_from_topic(request: TopicRequest):
         
         topic = request.topic.strip()
         
-        # Generate words using LLM service
-        words = await LLMService.generate_words_from_topic(topic)
+        # Generate words and clues using LLM service
+        word_clue_data = await LLMService.generate_words_and_clues_from_topic(topic)
+        
+        # Extract words and create clue mapping
+        words = [item['word'] for item in word_clue_data]
+        clue_mapping = {item['word']: item['clue'] for item in word_clue_data}
+        
+        # Generate unique ID for this crossword session
+        crossword_id = str(uuid.uuid4())
+        
+        # Store clue data for later retrieval
+        clue_storage[crossword_id] = clue_mapping
         
         return TopicWordsResponse(
             words=words,
             topic=topic,
             success=True,
-            message=f"Successfully generated {len(words)} words for topic '{topic}'"
+            message=f"Successfully generated {len(words)} words for topic '{topic}'",
+            crossword_id=crossword_id
         )
         
     except Exception as e:
@@ -161,6 +188,33 @@ async def generate_words_from_topic(request: TopicRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate words for topic: {str(e)}"
+        )
+
+@app.get("/clues/{crossword_id}", response_model=CluesResponse)
+async def get_clues(crossword_id: str):
+    try:
+        if crossword_id not in clue_storage:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Crossword ID '{crossword_id}' not found. Clues may have expired."
+            )
+        
+        clues = clue_storage[crossword_id]
+        
+        return CluesResponse(
+            clues=clues,
+            crossword_id=crossword_id,
+            success=True,
+            message=f"Retrieved {len(clues)} clues for crossword"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error retrieving clues for crossword '{crossword_id}': {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve clues: {str(e)}"
         )
 
 @app.get("/health")

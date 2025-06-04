@@ -11,6 +11,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [currentCrosswordId, setCurrentCrosswordId] = useState<string | null>(null);
+  const [clues, setClues] = useState<{ [word: string]: string }>({});
 
   // Check backend connectivity on component mount
   useEffect(() => {
@@ -21,7 +23,7 @@ const App: React.FC = () => {
     checkBackend();
   }, []);
 
-  const handleGenerateCrossword = async (words: string[]) => {
+  const handleGenerateCrossword = async (words: string[], crosswordId?: string) => {
     setIsLoading(true);
     setError('');
 
@@ -29,9 +31,44 @@ const App: React.FC = () => {
       const newCrossword = await CrosswordAPI.generateCrossword(words);
       console.log('New crossword generated:', newCrossword.word_placements.length, 'words');
       setCrossword(newCrossword);
+      setCurrentCrosswordId(crosswordId || null);
+      setClues({}); // Clear previous clues
+      
+      // Automatically load clues if crossword_id is available
+      if (crosswordId) {
+        try {
+          const retrievedClues = await CrosswordAPI.getClues(crosswordId);
+          setClues(retrievedClues);
+          console.log('Auto-loaded clues:', Object.keys(retrievedClues).length, 'clues');
+        } catch (clueError) {
+          console.warn('Failed to auto-load clues:', clueError);
+          // Don't set error here, just continue without clues
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate crossword');
       console.error('Crossword generation error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCheckPuzzle = async () => {
+    if (!currentCrosswordId) {
+      setError('No clues available. Please generate a crossword from a topic first.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const retrievedClues = await CrosswordAPI.getClues(currentCrosswordId);
+      setClues(retrievedClues);
+      console.log('Retrieved clues:', Object.keys(retrievedClues).length, 'clues');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to retrieve clues');
+      console.error('Clue retrieval error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -103,9 +140,30 @@ const App: React.FC = () => {
       {/* Crossword display */}
       {!isLoading && (
         <>
-          <p style={{ marginBottom: '20px', color: '#666', fontSize: '14px' }}>
-            Click on a square to start typing. Click again to switch between across and down.
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
+              Click on a square to start typing. Click again to switch between across and down.
+            </p>
+            
+            {currentCrosswordId && Object.keys(clues).length === 0 && (
+              <button
+                onClick={handleCheckPuzzle}
+                disabled={isLoading}
+                style={{
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '4px',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}
+              >
+                🔍 Check Puzzle
+              </button>
+            )}
+          </div>
           
           <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start' }}>
             <CrosswordGrid 
@@ -114,7 +172,8 @@ const App: React.FC = () => {
             />
             <ClueList 
               key={`clues-${crossword.word_placements.map(w => w.word).join('-')}`}
-              wordPlacements={crossword.word_placements} 
+              wordPlacements={crossword.word_placements}
+              clues={clues}
             />
           </div>
           
