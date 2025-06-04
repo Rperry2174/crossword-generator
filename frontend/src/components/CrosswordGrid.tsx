@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { CrosswordGrid as CrosswordGridType, Direction, WordPlacement } from '../types/crossword';
 
 interface Theme {
@@ -12,6 +12,13 @@ interface Theme {
 interface CrosswordGridProps {
   crossword: CrosswordGridType;
   theme: Theme;
+  onCheckResults?: (results: { correctCount: number; totalCount: number; incorrectCells: {row: number, col: number}[] }) => void;
+  onRevealComplete?: () => void;
+}
+
+interface CrosswordGridRef {
+  checkPuzzle: () => void;
+  revealPuzzle: () => void;
 }
 
 interface CellInfo {
@@ -26,11 +33,12 @@ interface HighlightedWord {
   wordIndex: number;
 }
 
-const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
+const CrosswordGrid = forwardRef<CrosswordGridRef, CrosswordGridProps>(({ crossword, theme, onCheckResults, onRevealComplete }, ref) => {
   const [userGrid, setUserGrid] = useState<string[][]>([]);
   const [highlightedWord, setHighlightedWord] = useState<HighlightedWord | null>(null);
   const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
   const [currentDirection, setCurrentDirection] = useState<Direction>(Direction.HORIZONTAL);
+  const [incorrectCells, setIncorrectCells] = useState<{row: number, col: number}[]>([]);
 
   // Initialize user grid with empty strings for fillable cells
   useEffect(() => {
@@ -212,6 +220,90 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
     return activeCell.row === row && activeCell.col === col;
   };
 
+  // Check if cell is incorrect (for check mode)
+  const isCellIncorrect = (row: number, col: number): boolean => {
+    return incorrectCells.some(cell => cell.row === row && cell.col === col);
+  };
+
+  // Get the correct letter for a cell
+  const getCorrectLetter = (row: number, col: number): string => {
+    // Find which word this cell belongs to and what letter it should be
+    for (const placement of crossword.word_placements) {
+      if (placement.direction === Direction.HORIZONTAL) {
+        if (placement.start_row === row && 
+            col >= placement.start_col && 
+            col < placement.start_col + placement.word.length) {
+          return placement.word[col - placement.start_col];
+        }
+      } else {
+        if (placement.start_col === col && 
+            row >= placement.start_row && 
+            row < placement.start_row + placement.word.length) {
+          return placement.word[row - placement.start_row];
+        }
+      }
+    }
+    return '';
+  };
+
+  // Check puzzle function
+  const checkPuzzle = useCallback(() => {
+    const incorrect: {row: number, col: number}[] = [];
+    let correctCount = 0;
+    let totalCount = 0;
+
+    for (let row = 0; row < crossword.height; row++) {
+      for (let col = 0; col < crossword.width; col++) {
+        if (crossword.grid[row][col] !== null) { // This is a fillable cell
+          totalCount++;
+          const userLetter = userGrid[row]?.[col] || '';
+          const correctLetter = getCorrectLetter(row, col);
+          
+          if (userLetter === correctLetter && userLetter !== '') {
+            correctCount++;
+          } else if (userLetter !== '' && userLetter !== correctLetter) {
+            incorrect.push({ row, col });
+          }
+        }
+      }
+    }
+
+    setIncorrectCells(incorrect);
+    
+    if (onCheckResults) {
+      onCheckResults({ correctCount, totalCount, incorrectCells: incorrect });
+    }
+  }, [crossword, userGrid, onCheckResults]);
+
+  // Reveal puzzle function
+  const revealPuzzle = useCallback(() => {
+    const newUserGrid = [...userGrid];
+    
+    for (let row = 0; row < crossword.height; row++) {
+      for (let col = 0; col < crossword.width; col++) {
+        if (crossword.grid[row][col] !== null) { // This is a fillable cell
+          const correctLetter = getCorrectLetter(row, col);
+          if (correctLetter) {
+            newUserGrid[row][col] = correctLetter;
+          }
+        }
+      }
+    }
+
+    setUserGrid(newUserGrid);
+    setIncorrectCells([]); // Clear any incorrect highlighting
+    
+    if (onRevealComplete) {
+      onRevealComplete();
+    }
+  }, [crossword, userGrid, onRevealComplete]);
+
+  // Expose functions to parent component
+  useImperativeHandle(ref, () => ({
+    checkPuzzle,
+    revealPuzzle
+  }), [checkPuzzle, revealPuzzle]);
+
   return (
     <div 
       className="crossword-container"
@@ -248,6 +340,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
               const cellInfo = getCellInfo(rowIndex, colIndex);
               const isHighlighted = isCellHighlighted(rowIndex, colIndex);
               const isActive = isCellActive(rowIndex, colIndex);
+              const isIncorrect = isCellIncorrect(rowIndex, colIndex);
               
               return (
                 <div
@@ -257,11 +350,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
                     width: '48px',
                     height: '48px',
                     backgroundColor: cellInfo.isBlank 
-                      ? (isActive 
-                          ? theme.colors.primary
-                          : isHighlighted 
-                            ? '#e0f2fe'  // Light blue background for better readability
-                            : theme.colors.background)
+                      ? (isIncorrect
+                          ? '#ffebee'  // Light red background for incorrect cells
+                          : isActive 
+                            ? theme.colors.primary
+                            : isHighlighted 
+                              ? '#e0f2fe'  // Light blue background for better readability
+                              : theme.colors.background)
                       : theme.colors.text.primary,
                     display: 'flex',
                     alignItems: 'center',
@@ -272,9 +367,11 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
                     cursor: cellInfo.isBlank ? 'pointer' : 'default',
                     position: 'relative',
                     transition: 'all 0.15s ease',
-                    color: isActive 
-                      ? theme.colors.text.inverse 
-                      : theme.colors.text.primary,
+                    color: isIncorrect
+                      ? '#d32f2f'  // Red text for incorrect cells
+                      : isActive 
+                        ? theme.colors.text.inverse 
+                        : theme.colors.text.primary,
                     textTransform: 'uppercase',
                     userSelect: 'none'
                   }}
@@ -320,6 +417,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ crossword, theme }) => {
       </div>
     </div>
   );
-};
+});
+
+CrosswordGrid.displayName = 'CrosswordGrid';
 
 export default CrosswordGrid;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CrosswordGrid from './components/CrosswordGrid';
 import ClueList from './components/ClueList';
 import WordInput from './components/WordInput';
@@ -13,6 +13,8 @@ const App: React.FC = () => {
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [currentCrosswordId, setCurrentCrosswordId] = useState<string | null>(null);
   const [clues, setClues] = useState<{ [word: string]: string }>({});
+  const [checkResults, setCheckResults] = useState<{ correctCount: number; totalCount: number; percentage: number } | null>(null);
+  const crosswordGridRef = useRef<any>(null);
 
   // Design system
   const theme = {
@@ -126,7 +128,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleCheckPuzzle = async () => {
+  const handleLoadClues = async () => {
     if (!currentCrosswordId) {
       setError('No clues available. Please generate a crossword from a topic first.');
       return;
@@ -144,6 +146,28 @@ const App: React.FC = () => {
       console.error('Clue retrieval error:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCheckResults = (results: { correctCount: number; totalCount: number; incorrectCells: {row: number, col: number}[] }) => {
+    const percentage = Math.round((results.correctCount / results.totalCount) * 100);
+    setCheckResults({
+      correctCount: results.correctCount,
+      totalCount: results.totalCount,
+      percentage
+    });
+  };
+
+  const handleCheckPuzzle = () => {
+    if (crosswordGridRef.current) {
+      crosswordGridRef.current.checkPuzzle();
+    }
+  };
+
+  const handleRevealPuzzle = () => {
+    if (crosswordGridRef.current) {
+      crosswordGridRef.current.revealPuzzle();
+      setCheckResults(null); // Clear check results when revealing
     }
   };
 
@@ -330,9 +354,26 @@ const App: React.FC = () => {
                 Click any square to start solving • Press Tab to change direction
               </p>
               
-              {currentCrosswordId && Object.keys(clues).length === 0 && (
-                <button
-                  onClick={handleCheckPuzzle}
+              <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center' }}>
+                {/* Check Results Display */}
+                {checkResults && (
+                  <div style={{
+                    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                    backgroundColor: checkResults.percentage === 100 ? '#f0fdf4' : '#fffbeb',
+                    border: `1px solid ${checkResults.percentage === 100 ? '#bbf7d0' : '#fed7aa'}`,
+                    borderRadius: theme.borderRadius.md,
+                    fontSize: theme.typography.fontSize.sm,
+                    fontWeight: theme.typography.fontWeight.semibold,
+                    color: checkResults.percentage === 100 ? '#059669' : '#d97706'
+                  }}>
+                    {checkResults.percentage}% Complete ({checkResults.correctCount}/{checkResults.totalCount})
+                  </div>
+                )}
+                
+                {/* Load Clues Button */}
+                {currentCrosswordId && Object.keys(clues).length === 0 && (
+                  <button
+                    onClick={handleLoadClues}
                   disabled={isLoading}
                   style={{
                     backgroundColor: theme.colors.primary,
@@ -367,7 +408,88 @@ const App: React.FC = () => {
                   <span>🔍</span>
                   Load Clues
                 </button>
-              )}
+                )}
+                
+                {/* Check Puzzle Button */}
+                {Object.keys(clues).length > 0 && (
+                  <button
+                    onClick={handleCheckPuzzle}
+                    disabled={isLoading}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: theme.colors.text.inverse,
+                      border: 'none',
+                      padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                      borderRadius: theme.borderRadius.md,
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      fontSize: theme.typography.fontSize.sm,
+                      fontWeight: theme.typography.fontWeight.semibold,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: theme.spacing.sm,
+                      transition: 'all 0.2s ease',
+                      boxShadow: theme.shadow.sm
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.backgroundColor = '#047857';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = theme.shadow.md;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.backgroundColor = '#059669';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = theme.shadow.sm;
+                      }
+                    }}
+                  >
+                    <span>✓</span>
+                    Check Puzzle
+                  </button>
+                )}
+                
+                {/* Reveal Puzzle Button */}
+                {Object.keys(clues).length > 0 && (
+                  <button
+                    onClick={handleRevealPuzzle}
+                    disabled={isLoading}
+                    style={{
+                      backgroundColor: '#d97706',
+                      color: theme.colors.text.inverse,
+                      border: 'none',
+                      padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                      borderRadius: theme.borderRadius.md,
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      fontSize: theme.typography.fontSize.sm,
+                      fontWeight: theme.typography.fontWeight.semibold,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: theme.spacing.sm,
+                      transition: 'all 0.2s ease',
+                      boxShadow: theme.shadow.sm
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.backgroundColor = '#b45309';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = theme.shadow.md;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isLoading) {
+                        e.currentTarget.style.backgroundColor = '#d97706';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = theme.shadow.sm;
+                      }
+                    }}
+                  >
+                    <span>💡</span>
+                    Reveal Puzzle
+                  </button>
+                )}
+              </div>
             </div>
             
             {/* Main Content Grid */}
@@ -378,9 +500,12 @@ const App: React.FC = () => {
               alignItems: 'flex-start'
             }}>
               <CrosswordGrid 
+                ref={crosswordGridRef}
                 key={`crossword-${crossword.word_placements.map(w => w.word).join('-')}`}
                 crossword={crossword}
                 theme={theme}
+                onCheckResults={handleCheckResults}
+                onRevealComplete={() => setCheckResults(null)}
               />
               <ClueList 
                 key={`clues-${crossword.word_placements.map(w => w.word).join('-')}-${Object.keys(clues).length}-${currentCrosswordId || 'no-id'}`}
