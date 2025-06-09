@@ -4,6 +4,10 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Set build-time environment variables
+ARG PUBLIC_URL=""
+ENV PUBLIC_URL=$PUBLIC_URL
+
 # Copy package files for better caching
 COPY package*.json ./
 
@@ -21,8 +25,9 @@ RUN npm run build
 # Production stage with Nginx
 FROM nginx:alpine
 
-# Set default backend host
+# Set default environment variables
 ENV BACKEND_HOST=backend
+ENV PUBLIC_URL=""
 
 # Copy built assets from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html

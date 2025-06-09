@@ -1,0 +1,35 @@
+# Docker Compose for testing subpath deployment
+version: '3.8'
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crossword-backend-test
+    environment:
+      - LLM_PROVIDER=mock
+    networks:
+      - test-network
+
+  # Frontend with subpath configuration
+  frontend-subpath:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        PUBLIC_URL: /crossword-good-prompt
+    container_name: crossword-frontend-subpath
+    ports:
+      - "8080:80"
+    environment:
+      - BACKEND_HOST=backend
+    depends_on:
+      - backend
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
