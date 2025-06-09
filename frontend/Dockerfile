@@ -4,9 +4,7 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Set build-time environment variables
-ARG PUBLIC_URL=""
-ENV PUBLIC_URL=$PUBLIC_URL
+# Build with relative paths - PUBLIC_URL will be handled at runtime
 
 # Copy package files for better caching
 COPY package*.json ./
@@ -21,6 +19,10 @@ COPY tsconfig.json ./
 
 # Build the application
 RUN npm run build
+
+# Add PUBLIC_URL placeholder to HTML files for runtime substitution
+RUN find build -name "*.html" -exec sed -i 's|href="\./|href="%PUBLIC_URL%/|g' {} \; && \
+    find build -name "*.html" -exec sed -i 's|src="\./|src="%PUBLIC_URL%/|g' {} \;
 
 # Production stage with Nginx
 FROM nginx:alpine

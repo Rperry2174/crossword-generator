@@ -2,7 +2,7 @@
   "name": "crossword-frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "%PUBLIC_URL%",
+  "homepage": ".",
   "dependencies": {
     "@types/node": "^16.18.0",
     "@types/react": "^18.0.0",
