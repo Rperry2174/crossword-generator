@@ -169,19 +169,28 @@ async def generate_words_from_topic(request: TopicRequest):
         words = [item['word'] for item in word_clue_data]
         clue_mapping = {item['word']: item['clue'] for item in word_clue_data}
         
+        # Log the generated response for debugging
+        print(f"📝 Generated {len(words)} words for topic '{topic}': {words}")
+        print(f"🧩 Sample clues: {dict(list(clue_mapping.items())[:3])}")
+        
         # Generate unique ID for this crossword session
         crossword_id = str(uuid.uuid4())
         
         # Store clue data for later retrieval
         clue_storage[crossword_id] = clue_mapping
         
-        return TopicWordsResponse(
+        response = TopicWordsResponse(
             words=words,
             topic=topic,
             success=True,
             message=f"Successfully generated {len(words)} words for topic '{topic}'",
             crossword_id=crossword_id
         )
+        
+        # Log the API response being sent to frontend
+        print(f"🚀 API Response for topic '{topic}': {response.model_dump()}")
+        
+        return response
         
     except Exception as e:
         print(f"Error generating words for topic '{request.topic}': {e}")
