@@ -54,18 +54,23 @@ Now generate 30 word-clue pairs for the topic: "{topic}\""""
     async def generate_words_and_clues_from_topic(topic: str) -> List[Dict[str, str]]:
         """New method that returns both words and clues"""
         config = LLMService.get_config()
+        print(f"🔧 LLM_PROVIDER: {config['provider']}")
         
         try:
             if config['provider'] == 'openai' and config['openai_key']:
+                print(f"🚀 Using OpenAI for topic: {topic}")
                 return await LLMService._call_openai(topic, config)
             elif config['provider'] == 'anthropic' and config['anthropic_key']:
+                print(f"🚀 Using Anthropic for topic: {topic}")
                 return await LLMService._call_anthropic(topic, config)
             elif config['provider'] == 'ollama':
+                print(f"🚀 Using Ollama for topic: {topic}")
                 return await LLMService._call_ollama(topic, config)
             else:
+                print(f"⚠️  No valid LLM provider configured. Provider: {config['provider']}, Has API keys: OpenAI={bool(config['openai_key'])}, Anthropic={bool(config['anthropic_key'])}")
                 return LLMService._get_mock_word_clues(topic)
         except Exception as e:
-            print(f"LLM API failed: {e}")
+            print(f"❌ LLM call failed: {e}")
             print(f"Provider: {config['provider']}")
             print(f"API key present: {bool(config.get('openai_key' if config['provider'] == 'openai' else 'anthropic_key'))}")
             print("Falling back to mock")
@@ -238,6 +243,7 @@ Now generate 30 word-clue pairs for the topic: "{topic}\""""
     @staticmethod
     def _get_mock_word_clues(topic: str) -> List[Dict[str, str]]:
         """Return mock word-clue pairs for various topics"""
+        print(f"⚠️  Using MOCK data for topic '{topic}' - LLM_PROVIDER is set to 'mock' or LLM call failed")
         topic_lower = topic.lower()
         
         mock_data = {
